@@ -61,12 +61,24 @@ private struct ChartHomeView: View {
         coordinator.history.filter(\.isComplete)
     }
 
+    private var inProgressCharts: [ChartState] {
+        coordinator.history.filter { !$0.isComplete }
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 28) {
                     DailyHomeSection(store: coordinator.dailyStore,
                                      onStart: coordinator.createDailyChart)
+                    chartSection(
+                        title: "In Progress",
+                        systemImage: "pencil.line",
+                        charts: inProgressCharts,
+                        showsSaveButton: false,
+                        emptyTitle: "No drafts in progress",
+                        emptyMessage: "Unfinished charts wait here until you come back to them."
+                    )
                     chartSection(
                         title: "Completed",
                         systemImage: "checkmark.rectangle",

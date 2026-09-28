@@ -15,6 +15,7 @@ enum ChartServiceError: LocalizedError {
 
 /// Syncs charts through the CloudKit public database. Records are addressed
 /// directly by the chart's UUID, so no queryable indexes are required.
+/// Moderation controls and known gaps are documented in Alignment Charts/MODERATION.md.
 final class CloudKitChartService {
     static let shared = CloudKitChartService()
 

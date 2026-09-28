@@ -24,6 +24,7 @@ final class ChartCoordinator: ObservableObject {
     private var loadedMessageID: String?
     private var editingBase: ChartState?
     private var editingID = UUID()
+    private var draftSaveSucceeded = true
 
     init(controller: MSMessagesAppViewController) {
         self.controller = controller
@@ -151,7 +152,15 @@ final class ChartCoordinator: ObservableObject {
 
     func persistDraft(_ draft: ChartState) {
         guard let conversationScope else { return }
-        ChartHistoryStore.save(draft, base: editingBase, in: conversationScope)
+        let saved = ChartHistoryStore.save(draft, base: editingBase, in: conversationScope)
+        if saved {
+            draftSaveSucceeded = true
+        } else if draftSaveSucceeded {
+            // Alert only on the success-to-failure transition so repeated
+            // failures while the user keeps editing don't spam alerts.
+            draftSaveSucceeded = false
+            errorMessage = "Couldn't save your draft. Your latest changes may be lost if you close the editor."
+        }
         refreshHistory()
     }
 
