@@ -1,0 +1,10 @@
+Experimental update — Daily alignment charts & streaks
+
+• Try a new daily alignment chart, with two weeks of templates starting September 6.
+• Build a personal streak by completing a daily chart each day.
+• Everyone in a chat can claim credit by tapping the completed daily chart—even if they didn’t contribute.
+• Claim before the daily reset at midnight UTC. Each day counts once across all chats, and missed days break the current streak.
+• See your current streak, best streak, and reset countdown. Streaks sync through your iCloud account.
+• Simplified the daily card: tap the template title to start or continue, and use Refresh to update the daily and streak.
+
+This is an experimental update. Please test shared completion, claims across multiple chats and devices, and the daily reset. Everyone testing daily streaks should install this build. An iCloud connection is required to claim credit before reset.

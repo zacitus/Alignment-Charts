@@ -1,0 +1,8 @@
+Alignment Charts 1.0 (21)
+
+• Find images from Wikipedia and Wikimedia Commons using a cell’s caption, with a checkmark showing the selected image.
+• Updated chart editing with a collapsible Layout section and a quick default-layout option for new charts.
+• Shared charts now merge independent edits and let you review conflicting changes before updating.
+• Unsent drafts are preserved when reopening charts and receiving updates.
+
+Please test image search and selection, creating and editing charts, and editing the same chart from two devices. All collaborators should update to this build for the new collaboration behavior.

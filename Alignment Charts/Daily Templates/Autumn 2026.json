@@ -1,0 +1,1192 @@
+[
+  {
+    "day": "2026-09-22",
+    "title": "Cozy Season",
+    "prompt": "Sort cozy activities, objects, or places.",
+    "rowAxisTitle": "Comfort",
+    "columnAxisTitle": "Effort",
+    "rowLabels": [
+      "Instant calm",
+      "Pretty cozy",
+      "Secretly stressful"
+    ],
+    "columnLabels": [
+      "No prep",
+      "A little setup",
+      "Whole production"
+    ]
+  },
+  {
+    "day": "2026-09-23",
+    "title": "Breakfast Club",
+    "prompt": "Place breakfast foods or your usual morning orders.",
+    "rowAxisTitle": "Sweetness",
+    "columnAxisTitle": "Staying power",
+    "rowLabels": [
+      "Savory",
+      "A little sweet",
+      "Dessert in disguise"
+    ],
+    "columnLabels": [
+      "Quick bite",
+      "Until lunch",
+      "All-day fuel"
+    ]
+  },
+  {
+    "day": "2026-09-24",
+    "title": "Video Game Sidekicks",
+    "prompt": "Sort companions from games your group knows.",
+    "rowAxisTitle": "Helpfulness",
+    "columnAxisTitle": "Personality",
+    "rowLabels": [
+      "Saves the run",
+      "Sometimes useful",
+      "Needs rescuing"
+    ],
+    "columnLabels": [
+      "Quiet partner",
+      "Charming chatter",
+      "Absolute menace"
+    ]
+  },
+  {
+    "day": "2026-09-25",
+    "title": "Road Trip Stops",
+    "prompt": "Choose places you would stop on a long drive.",
+    "rowAxisTitle": "Worth the stop",
+    "columnAxisTitle": "Detour",
+    "rowLabels": [
+      "Must see",
+      "Good enough",
+      "Keep driving"
+    ],
+    "columnLabels": [
+      "Right off the exit",
+      "A few extra miles",
+      "Whole new route"
+    ]
+  },
+  {
+    "day": "2026-09-26",
+    "title": "Kitchen Gadgets",
+    "prompt": "Sort tools and appliances in your kitchen.",
+    "rowAxisTitle": "Usefulness",
+    "columnAxisTitle": "Space taken",
+    "rowLabels": [
+      "Daily hero",
+      "Occasional helper",
+      "Drawer decoration"
+    ],
+    "columnLabels": [
+      "Tiny",
+      "Counter resident",
+      "Own cabinet"
+    ]
+  },
+  {
+    "day": "2026-09-27",
+    "title": "Cartoon Teachers",
+    "prompt": "Cast cartoon characters as your teachers.",
+    "rowAxisTitle": "Teaching skill",
+    "columnAxisTitle": "Classroom rules",
+    "rowLabels": [
+      "Learn a lot",
+      "Somehow pass",
+      "Learn nothing"
+    ],
+    "columnLabels": [
+      "Very strict",
+      "Fair enough",
+      "Anything goes"
+    ]
+  },
+  {
+    "day": "2026-09-28",
+    "title": "Rainy Day Plans",
+    "prompt": "Place activities for a day stuck indoors.",
+    "rowAxisTitle": "Mood",
+    "columnAxisTitle": "Company",
+    "rowLabels": [
+      "Restful",
+      "Creative",
+      "Chaotic"
+    ],
+    "columnLabels": [
+      "Solo",
+      "With a friend",
+      "Whole group"
+    ]
+  },
+  {
+    "day": "2026-09-29",
+    "title": "Alien First Impressions",
+    "prompt": "Pick Earth objects to show visiting aliens.",
+    "rowAxisTitle": "Human pride",
+    "columnAxisTitle": "Explanation needed",
+    "rowLabels": [
+      "Our finest work",
+      "Perfectly ordinary",
+      "We owe an apology"
+    ],
+    "columnLabels": [
+      "Obvious",
+      "Needs context",
+      "Still confusing"
+    ]
+  },
+  {
+    "day": "2026-09-30",
+    "title": "Fantasy Shops",
+    "prompt": "Invent shops you would find in a fantasy town.",
+    "rowAxisTitle": "Inventory",
+    "columnAxisTitle": "Shopkeeper",
+    "rowLabels": [
+      "Practical",
+      "Magical",
+      "Probably cursed"
+    ],
+    "columnLabels": [
+      "Helpful",
+      "Mysterious",
+      "Actively scamming"
+    ]
+  },
+  {
+    "day": "2026-10-01",
+    "title": "Soup Season",
+    "prompt": "Sort soups, stews, and questionable liquid meals.",
+    "rowAxisTitle": "Comfort",
+    "columnAxisTitle": "Eating method",
+    "rowLabels": [
+      "Healing",
+      "Just lunch",
+      "A challenge"
+    ],
+    "columnLabels": [
+      "Sip it",
+      "Spoon it",
+      "Knife and fork?"
+    ]
+  },
+  {
+    "day": "2026-10-02",
+    "title": "Board Game Night",
+    "prompt": "Place games your group would bring to the table.",
+    "rowAxisTitle": "Competition",
+    "columnAxisTitle": "Learning curve",
+    "rowLabels": [
+      "Friendly",
+      "Serious",
+      "Grudge material"
+    ],
+    "columnLabels": [
+      "Start immediately",
+      "Quick explanation",
+      "Read the rulebook"
+    ]
+  },
+  {
+    "day": "2026-10-03",
+    "title": "Fictional Detectives",
+    "prompt": "Sort characters by how they would solve a mystery.",
+    "rowAxisTitle": "Accuracy",
+    "columnAxisTitle": "Method",
+    "rowLabels": [
+      "Always right",
+      "Lucky guess",
+      "Wrong suspect"
+    ],
+    "columnLabels": [
+      "By the book",
+      "Creative clues",
+      "Pure chaos"
+    ]
+  },
+  {
+    "day": "2026-10-04",
+    "title": "Grocery Store Temptations",
+    "prompt": "Place items that somehow end up in your cart.",
+    "rowAxisTitle": "Need",
+    "columnAxisTitle": "Impulse level",
+    "rowLabels": [
+      "Essential",
+      "Nice to have",
+      "Absolutely unnecessary"
+    ],
+    "columnLabels": [
+      "On the list",
+      "Considered it",
+      "Already eating it"
+    ]
+  },
+  {
+    "day": "2026-10-05",
+    "title": "Phone Notifications",
+    "prompt": "Sort alerts, apps, or messages you receive.",
+    "rowAxisTitle": "Urgency",
+    "columnAxisTitle": "Reaction",
+    "rowLabels": [
+      "Act now",
+      "Can wait",
+      "Never needed"
+    ],
+    "columnLabels": [
+      "Happy to see it",
+      "No reaction",
+      "Instant annoyance"
+    ]
+  },
+  {
+    "day": "2026-10-06",
+    "title": "Amusement Park Rides",
+    "prompt": "Choose rides and attractions for your group.",
+    "rowAxisTitle": "Thrill",
+    "columnAxisTitle": "Wait tolerance",
+    "rowLabels": [
+      "Gentle",
+      "Exciting",
+      "Terrifying"
+    ],
+    "columnLabels": [
+      "Walk on",
+      "Wait a bit",
+      "Worth an hour"
+    ]
+  },
+  {
+    "day": "2026-10-07",
+    "title": "Fictional Neighbors",
+    "prompt": "Cast characters as the people living next door.",
+    "rowAxisTitle": "Neighbor quality",
+    "columnAxisTitle": "Visibility",
+    "rowLabels": [
+      "Lifesaver",
+      "Mostly fine",
+      "Noise complaint"
+    ],
+    "columnLabels": [
+      "Never seen",
+      "Waves hello",
+      "Always at your door"
+    ]
+  },
+  {
+    "day": "2026-10-08",
+    "title": "Sandwich Architecture",
+    "prompt": "Sort sandwiches by taste and structural integrity.",
+    "rowAxisTitle": "Flavor",
+    "columnAxisTitle": "Mess",
+    "rowLabels": [
+      "Perfect bite",
+      "Pretty good",
+      "Questionable"
+    ],
+    "columnLabels": [
+      "One hand",
+      "Needs two hands",
+      "Plate required"
+    ]
+  },
+  {
+    "day": "2026-10-09",
+    "title": "Museum of Your Life",
+    "prompt": "Nominate objects for a museum about your group.",
+    "rowAxisTitle": "Meaning",
+    "columnAxisTitle": "Display value",
+    "rowLabels": [
+      "Deeply personal",
+      "Good story",
+      "No idea why"
+    ],
+    "columnLabels": [
+      "Ordinary object",
+      "Conversation piece",
+      "Centerpiece"
+    ]
+  },
+  {
+    "day": "2026-10-10",
+    "title": "Autumn Outfits",
+    "prompt": "Sort fall clothing or fictional character outfits.",
+    "rowAxisTitle": "Warmth",
+    "columnAxisTitle": "Practicality",
+    "rowLabels": [
+      "Light layer",
+      "Cozy",
+      "Portable furnace"
+    ],
+    "columnLabels": [
+      "Everyday useful",
+      "Occasional wear",
+      "Only for the look"
+    ]
+  },
+  {
+    "day": "2026-10-11",
+    "title": "Fictional Sports Teams",
+    "prompt": "Draft characters for an imaginary team.",
+    "rowAxisTitle": "Skill",
+    "columnAxisTitle": "Teamwork",
+    "rowLabels": [
+      "Star player",
+      "Decent effort",
+      "Bench warmer"
+    ],
+    "columnLabels": [
+      "Team first",
+      "Own agenda",
+      "Total disruption"
+    ]
+  },
+  {
+    "day": "2026-10-12",
+    "title": "Coffee Shop Orders",
+    "prompt": "Place drinks you would order at a cafe.",
+    "rowAxisTitle": "Energy boost",
+    "columnAxisTitle": "Order complexity",
+    "rowLabels": [
+      "No boost",
+      "Gentle lift",
+      "Wired"
+    ],
+    "columnLabels": [
+      "Two words",
+      "A few choices",
+      "Long explanation"
+    ]
+  },
+  {
+    "day": "2026-10-13",
+    "title": "Unnecessary Inventions",
+    "prompt": "Invent products that solve very small problems.",
+    "rowAxisTitle": "Problem solved",
+    "columnAxisTitle": "Design",
+    "rowLabels": [
+      "Real annoyance",
+      "Minor inconvenience",
+      "No problem at all"
+    ],
+    "columnLabels": [
+      "Elegant",
+      "Overbuilt",
+      "Impossible"
+    ]
+  },
+  {
+    "day": "2026-10-14",
+    "title": "Dungeon Roommates",
+    "prompt": "Cast fantasy creatures as roommates.",
+    "rowAxisTitle": "Cleanliness",
+    "columnAxisTitle": "Danger",
+    "rowLabels": [
+      "Keeps it tidy",
+      "Leaves a mess",
+      "Destroys the kitchen"
+    ],
+    "columnLabels": [
+      "Harmless",
+      "Needs rules",
+      "Move out now"
+    ]
+  },
+  {
+    "day": "2026-10-15",
+    "title": "School Supplies",
+    "prompt": "Sort supplies you loved, lost, or never used.",
+    "rowAxisTitle": "Usefulness",
+    "columnAxisTitle": "Style",
+    "rowLabels": [
+      "Daily essential",
+      "Occasional use",
+      "Just decoration"
+    ],
+    "columnLabels": [
+      "Plain",
+      "Colorful",
+      "Over the top"
+    ]
+  },
+  {
+    "day": "2026-10-16",
+    "title": "Dream Vacation Homes",
+    "prompt": "Pick real or fictional places to stay.",
+    "rowAxisTitle": "Comfort",
+    "columnAxisTitle": "Getting there",
+    "rowLabels": [
+      "Luxury",
+      "Cozy",
+      "Roughing it"
+    ],
+    "columnLabels": [
+      "Easy trip",
+      "Long journey",
+      "Quest required"
+    ]
+  },
+  {
+    "day": "2026-10-17",
+    "title": "Pizza Toppings",
+    "prompt": "Sort toppings, including your controversial favorites.",
+    "rowAxisTitle": "Popularity",
+    "columnAxisTitle": "Adventure",
+    "rowLabels": [
+      "Crowd pleaser",
+      "Splits the room",
+      "Lone defender"
+    ],
+    "columnLabels": [
+      "Classic",
+      "A little different",
+      "Wild experiment"
+    ]
+  },
+  {
+    "day": "2026-10-18",
+    "title": "Magic Spells for Chores",
+    "prompt": "Invent spells that would help around the house.",
+    "rowAxisTitle": "Time saved",
+    "columnAxisTitle": "Side effects",
+    "rowLabels": [
+      "Hours",
+      "Minutes",
+      "Almost none"
+    ],
+    "columnLabels": [
+      "None",
+      "Minor weirdness",
+      "Total disaster"
+    ]
+  },
+  {
+    "day": "2026-10-19",
+    "title": "Theme Park Mascots",
+    "prompt": "Sort real or invented mascots.",
+    "rowAxisTitle": "Cuteness",
+    "columnAxisTitle": "Energy",
+    "rowLabels": [
+      "Adorable",
+      "Unusual",
+      "Nightmare fuel"
+    ],
+    "columnLabels": [
+      "Gentle wave",
+      "Big performance",
+      "Unstoppable"
+    ]
+  },
+  {
+    "day": "2026-10-20",
+    "title": "Fictional Chefs",
+    "prompt": "Cast characters as the chef making your dinner.",
+    "rowAxisTitle": "Food quality",
+    "columnAxisTitle": "Kitchen style",
+    "rowLabels": [
+      "Incredible",
+      "Edible",
+      "Order takeout"
+    ],
+    "columnLabels": [
+      "Precise",
+      "Improvising",
+      "Smoke alarm"
+    ]
+  },
+  {
+    "day": "2026-10-21",
+    "title": "Little Luxuries",
+    "prompt": "Place small treats that make a day better.",
+    "rowAxisTitle": "Joy",
+    "columnAxisTitle": "Frequency",
+    "rowLabels": [
+      "Life improving",
+      "Nice moment",
+      "Overrated"
+    ],
+    "columnLabels": [
+      "Every day",
+      "Occasional treat",
+      "Special occasion"
+    ]
+  },
+  {
+    "day": "2026-10-22",
+    "title": "Haunted House Guests",
+    "prompt": "Cast friends or characters on a haunted house visit.",
+    "rowAxisTitle": "Fear",
+    "columnAxisTitle": "Response",
+    "rowLabels": [
+      "Unbothered",
+      "Nervous",
+      "Terrified"
+    ],
+    "columnLabels": [
+      "Keeps moving",
+      "Investigates",
+      "Runs away"
+    ]
+  },
+  {
+    "day": "2026-10-23",
+    "title": "Monster Day Jobs",
+    "prompt": "Give monsters jobs they might actually do well.",
+    "rowAxisTitle": "Job performance",
+    "columnAxisTitle": "Blend-in ability",
+    "rowLabels": [
+      "Employee of month",
+      "Gets by",
+      "Fired immediately"
+    ],
+    "columnLabels": [
+      "Nobody notices",
+      "A few questions",
+      "Obviously a monster"
+    ]
+  },
+  {
+    "day": "2026-10-24",
+    "title": "Spooky Soundtrack",
+    "prompt": "Place songs that belong on a spooky playlist.",
+    "rowAxisTitle": "Spookiness",
+    "columnAxisTitle": "Danceability",
+    "rowLabels": [
+      "Playful",
+      "Eerie",
+      "Terrifying"
+    ],
+    "columnLabels": [
+      "Stand and listen",
+      "Head bob",
+      "Dance floor"
+    ]
+  },
+  {
+    "day": "2026-10-25",
+    "title": "Pumpkin Designs",
+    "prompt": "Invent or choose pumpkin carving designs.",
+    "rowAxisTitle": "Expression",
+    "columnAxisTitle": "Carving effort",
+    "rowLabels": [
+      "Friendly",
+      "Goofy",
+      "Menacing"
+    ],
+    "columnLabels": [
+      "Few cuts",
+      "Steady hand",
+      "Art degree"
+    ]
+  },
+  {
+    "day": "2026-10-26",
+    "title": "Horror Movie Decisions",
+    "prompt": "Sort decisions characters make in scary movies.",
+    "rowAxisTitle": "Survival value",
+    "columnAxisTitle": "Confidence",
+    "rowLabels": [
+      "Smart move",
+      "Risky",
+      "Terrible idea"
+    ],
+    "columnLabels": [
+      "Hesitant",
+      "Committed",
+      "Fully convinced"
+    ]
+  },
+  {
+    "day": "2026-10-27",
+    "title": "Costume Closet",
+    "prompt": "Place costumes your group could wear.",
+    "rowAxisTitle": "Recognition",
+    "columnAxisTitle": "Preparation",
+    "rowLabels": [
+      "Instantly known",
+      "Needs a hint",
+      "Long explanation"
+    ],
+    "columnLabels": [
+      "Already own it",
+      "Some crafting",
+      "Weeks of work"
+    ]
+  },
+  {
+    "day": "2026-10-28",
+    "title": "Candy Trading",
+    "prompt": "Sort Halloween candy for an imaginary trade.",
+    "rowAxisTitle": "Demand",
+    "columnAxisTitle": "Your attachment",
+    "rowLabels": [
+      "Everyone wants it",
+      "Some takers",
+      "Hard to trade"
+    ],
+    "columnLabels": [
+      "Give it away",
+      "Fair trade only",
+      "Keeping it all"
+    ]
+  },
+  {
+    "day": "2026-10-29",
+    "title": "Vampire Vacation",
+    "prompt": "Pick vacation activities for a vampire.",
+    "rowAxisTitle": "Enjoyment",
+    "columnAxisTitle": "Sunlight problem",
+    "rowLabels": [
+      "Dream outing",
+      "Passes the time",
+      "Never again"
+    ],
+    "columnLabels": [
+      "None",
+      "Manageable",
+      "Bring an umbrella"
+    ]
+  },
+  {
+    "day": "2026-10-30",
+    "title": "Ghost Room Service",
+    "prompt": "Invent services a ghost hotel could offer.",
+    "rowAxisTitle": "Helpfulness",
+    "columnAxisTitle": "Spookiness",
+    "rowLabels": [
+      "Five stars",
+      "Useful enough",
+      "Unnecessary"
+    ],
+    "columnLabels": [
+      "Almost normal",
+      "Eerie",
+      "Absolutely haunted"
+    ]
+  },
+  {
+    "day": "2026-10-31",
+    "title": "Halloween Party Roles",
+    "prompt": "Cast friends or characters at a Halloween party.",
+    "rowAxisTitle": "Costume effort",
+    "columnAxisTitle": "Party behavior",
+    "rowLabels": [
+      "Every detail",
+      "A solid attempt",
+      "Last-minute mask"
+    ],
+    "columnLabels": [
+      "Snack guardian",
+      "Story teller",
+      "Dance leader"
+    ]
+  },
+  {
+    "day": "2026-11-01",
+    "title": "The Extra Hour",
+    "prompt": "Sort ways to spend an unexpected free hour.",
+    "rowAxisTitle": "Satisfaction",
+    "columnAxisTitle": "Energy",
+    "rowLabels": [
+      "Worth it",
+      "Just fine",
+      "Where did it go?"
+    ],
+    "columnLabels": [
+      "Resting",
+      "Light effort",
+      "Full focus"
+    ]
+  },
+  {
+    "day": "2026-11-02",
+    "title": "Fictional Mayors",
+    "prompt": "Elect characters to run a tiny imaginary town.",
+    "rowAxisTitle": "Competence",
+    "columnAxisTitle": "Popularity",
+    "rowLabels": [
+      "Excellent",
+      "Getting by",
+      "Complete disaster"
+    ],
+    "columnLabels": [
+      "Beloved",
+      "Divisive",
+      "Nobody voted for this"
+    ]
+  },
+  {
+    "day": "2026-11-03",
+    "title": "Comfort TV",
+    "prompt": "Place shows your group returns to.",
+    "rowAxisTitle": "Mood",
+    "columnAxisTitle": "Attention",
+    "rowLabels": [
+      "Warm hug",
+      "Good laughs",
+      "Delicious drama"
+    ],
+    "columnLabels": [
+      "Background",
+      "Regular watching",
+      "Every detail"
+    ]
+  },
+  {
+    "day": "2026-11-04",
+    "title": "Desk Objects",
+    "prompt": "Sort things on your desk or dream workspace.",
+    "rowAxisTitle": "Purpose",
+    "columnAxisTitle": "Personality",
+    "rowLabels": [
+      "Essential",
+      "Sometimes useful",
+      "Decorative"
+    ],
+    "columnLabels": [
+      "Plain",
+      "Charming",
+      "Baffling"
+    ]
+  },
+  {
+    "day": "2026-11-05",
+    "title": "Dream Game Modes",
+    "prompt": "Invent extra modes for your favorite games.",
+    "rowAxisTitle": "Difficulty",
+    "columnAxisTitle": "Chaos",
+    "rowLabels": [
+      "Relaxed",
+      "Challenging",
+      "Brutal"
+    ],
+    "columnLabels": [
+      "Predictable",
+      "Surprising",
+      "Anything happens"
+    ]
+  },
+  {
+    "day": "2026-11-06",
+    "title": "Bakery Case",
+    "prompt": "Fill the grid with breads, pastries, and bakery treats.",
+    "rowAxisTitle": "Sweetness",
+    "columnAxisTitle": "Mess",
+    "rowLabels": [
+      "Savory",
+      "Lightly sweet",
+      "Sugar rush"
+    ],
+    "columnLabels": [
+      "Clean bite",
+      "Few crumbs",
+      "Powder everywhere"
+    ]
+  },
+  {
+    "day": "2026-11-07",
+    "title": "Fictional Babysitters",
+    "prompt": "Cast characters as babysitters for an afternoon.",
+    "rowAxisTitle": "Responsibility",
+    "columnAxisTitle": "Entertainment",
+    "rowLabels": [
+      "Trust completely",
+      "Check in often",
+      "Call someone else"
+    ],
+    "columnLabels": [
+      "Quiet activities",
+      "Great games",
+      "Legendary chaos"
+    ]
+  },
+  {
+    "day": "2026-11-08",
+    "title": "Public Transit Personalities",
+    "prompt": "Cast characters as fellow passengers.",
+    "rowAxisTitle": "Courtesy",
+    "columnAxisTitle": "Preparedness",
+    "rowLabels": [
+      "Thoughtful",
+      "Unaware",
+      "Absolute nuisance"
+    ],
+    "columnLabels": [
+      "Knows the route",
+      "Checks the map",
+      "Wrong direction"
+    ]
+  },
+  {
+    "day": "2026-11-09",
+    "title": "Weather as a Person",
+    "prompt": "Imagine weather conditions as people at a gathering.",
+    "rowAxisTitle": "Mood",
+    "columnAxisTitle": "Social energy",
+    "rowLabels": [
+      "Cheerful",
+      "Moody",
+      "Intense"
+    ],
+    "columnLabels": [
+      "Wallflower",
+      "Good company",
+      "Center of attention"
+    ]
+  },
+  {
+    "day": "2026-11-10",
+    "title": "Lost and Found",
+    "prompt": "Choose objects for an imaginary lost-and-found box.",
+    "rowAxisTitle": "Owner reaction",
+    "columnAxisTitle": "Mystery",
+    "rowLabels": [
+      "Desperate to find it",
+      "Mildly curious",
+      "Glad it is gone"
+    ],
+    "columnLabels": [
+      "Obvious owner",
+      "Some clues",
+      "Unexplainable"
+    ]
+  },
+  {
+    "day": "2026-11-11",
+    "title": "Fictional Mentors",
+    "prompt": "Sort characters who could teach you a new skill.",
+    "rowAxisTitle": "Advice",
+    "columnAxisTitle": "Teaching style",
+    "rowLabels": [
+      "Life changing",
+      "Sometimes useful",
+      "Please ignore"
+    ],
+    "columnLabels": [
+      "Patient",
+      "Tough love",
+      "Riddles only"
+    ]
+  },
+  {
+    "day": "2026-11-12",
+    "title": "Takeout Night",
+    "prompt": "Sort dishes your group might order for delivery.",
+    "rowAxisTitle": "Reheat value",
+    "columnAxisTitle": "Sharing",
+    "rowLabels": [
+      "Better tomorrow",
+      "Still good",
+      "Eat immediately"
+    ],
+    "columnLabels": [
+      "Individual portion",
+      "Easy to share",
+      "Everyone fights"
+    ]
+  },
+  {
+    "day": "2026-11-13",
+    "title": "Houseplant Personalities",
+    "prompt": "Sort real plants or invent plant personalities.",
+    "rowAxisTitle": "Care needed",
+    "columnAxisTitle": "Attitude",
+    "rowLabels": [
+      "Almost none",
+      "Regular attention",
+      "Constant care"
+    ],
+    "columnLabels": [
+      "Chill",
+      "Dramatic",
+      "Unstoppable"
+    ]
+  },
+  {
+    "day": "2026-11-14",
+    "title": "Dream Clubhouse",
+    "prompt": "Nominate features for your group's ideal hangout.",
+    "rowAxisTitle": "Usefulness",
+    "columnAxisTitle": "Space needed",
+    "rowLabels": [
+      "Must have",
+      "Nice extra",
+      "Absurd luxury"
+    ],
+    "columnLabels": [
+      "Small corner",
+      "Whole room",
+      "Entire building"
+    ]
+  },
+  {
+    "day": "2026-11-15",
+    "title": "Fictional Villain Hobbies",
+    "prompt": "Invent hobbies for villains on their day off.",
+    "rowAxisTitle": "Wholesomeness",
+    "columnAxisTitle": "Commitment",
+    "rowLabels": [
+      "Surprisingly sweet",
+      "Ordinary",
+      "Still villainous"
+    ],
+    "columnLabels": [
+      "Casual",
+      "Serious hobby",
+      "Whole identity"
+    ]
+  },
+  {
+    "day": "2026-11-16",
+    "title": "Alarm Clock Energy",
+    "prompt": "Sort sounds, songs, or characters as morning alarms.",
+    "rowAxisTitle": "Wake-up power",
+    "columnAxisTitle": "Mood after",
+    "rowLabels": [
+      "Gentle nudge",
+      "Works eventually",
+      "Instantly awake"
+    ],
+    "columnLabels": [
+      "Grateful",
+      "Unchanged",
+      "Furious"
+    ]
+  },
+  {
+    "day": "2026-11-17",
+    "title": "Bookstore Finds",
+    "prompt": "Place books or invented titles on the shelves.",
+    "rowAxisTitle": "Appeal",
+    "columnAxisTitle": "Reading effort",
+    "rowLabels": [
+      "Must read",
+      "Curious",
+      "Why does this exist?"
+    ],
+    "columnLabels": [
+      "Quick read",
+      "Weekend project",
+      "Long commitment"
+    ]
+  },
+  {
+    "day": "2026-11-18",
+    "title": "Winter Survival Kit",
+    "prompt": "Pick objects for surviving chilly days.",
+    "rowAxisTitle": "Warmth",
+    "columnAxisTitle": "Portability",
+    "rowLabels": [
+      "Toasty",
+      "Helps a bit",
+      "Mostly vibes"
+    ],
+    "columnLabels": [
+      "Pocket",
+      "Bag",
+      "Stay at home"
+    ]
+  },
+  {
+    "day": "2026-11-19",
+    "title": "Fictional Dinner Hosts",
+    "prompt": "Choose characters to host a dinner party.",
+    "rowAxisTitle": "Hospitality",
+    "columnAxisTitle": "Organization",
+    "rowLabels": [
+      "Makes you at home",
+      "Tries hard",
+      "Regrets inviting you"
+    ],
+    "columnLabels": [
+      "Everything ready",
+      "A bit behind",
+      "No food yet"
+    ]
+  },
+  {
+    "day": "2026-11-20",
+    "title": "Arcade Night",
+    "prompt": "Sort arcade games or invented machines.",
+    "rowAxisTitle": "Skill needed",
+    "columnAxisTitle": "Replay urge",
+    "rowLabels": [
+      "Anyone can play",
+      "Some practice",
+      "Expert timing"
+    ],
+    "columnLabels": [
+      "One round",
+      "A few tries",
+      "One more forever"
+    ]
+  },
+  {
+    "day": "2026-11-21",
+    "title": "Time Travel Souvenirs",
+    "prompt": "Pick things to bring back from another era.",
+    "rowAxisTitle": "Usefulness now",
+    "columnAxisTitle": "Explanation",
+    "rowLabels": [
+      "Daily use",
+      "Interesting keepsake",
+      "No practical use"
+    ],
+    "columnLabels": [
+      "Easy story",
+      "Long story",
+      "Impossible story"
+    ]
+  },
+  {
+    "day": "2026-11-22",
+    "title": "Homemade Gifts",
+    "prompt": "Sort gifts you could make for someone.",
+    "rowAxisTitle": "Sentiment",
+    "columnAxisTitle": "Crafting effort",
+    "rowLabels": [
+      "Deeply personal",
+      "Thoughtful",
+      "Funny gesture"
+    ],
+    "columnLabels": [
+      "Quick project",
+      "An afternoon",
+      "A whole month"
+    ]
+  },
+  {
+    "day": "2026-11-23",
+    "title": "Friendsgiving Guests",
+    "prompt": "Cast friends or characters at a shared meal.",
+    "rowAxisTitle": "Contribution",
+    "columnAxisTitle": "Arrival style",
+    "rowLabels": [
+      "Brings a feast",
+      "Brings a side",
+      "Brings themself"
+    ],
+    "columnLabels": [
+      "Early helper",
+      "Right on time",
+      "After dinner"
+    ]
+  },
+  {
+    "day": "2026-11-24",
+    "title": "Leftover Transformations",
+    "prompt": "Invent meals from leftovers in the fridge.",
+    "rowAxisTitle": "Result",
+    "columnAxisTitle": "Effort",
+    "rowLabels": [
+      "Better than before",
+      "Perfectly fine",
+      "Questionable"
+    ],
+    "columnLabels": [
+      "Microwave",
+      "One pan",
+      "Full recipe"
+    ]
+  },
+  {
+    "day": "2026-11-25",
+    "title": "Kitchen During a Feast",
+    "prompt": "Cast characters as helpers making a big meal.",
+    "rowAxisTitle": "Helpfulness",
+    "columnAxisTitle": "Stress",
+    "rowLabels": [
+      "Saves the day",
+      "Does one job",
+      "In the way"
+    ],
+    "columnLabels": [
+      "Calm",
+      "A little tense",
+      "Full panic"
+    ]
+  },
+  {
+    "day": "2026-11-26",
+    "title": "Thankful for the Little Things",
+    "prompt": "Sort everyday comforts your group appreciates.",
+    "rowAxisTitle": "Impact",
+    "columnAxisTitle": "Noticeability",
+    "rowLabels": [
+      "Makes the day",
+      "Nice bonus",
+      "Small smile"
+    ],
+    "columnLabels": [
+      "Often overlooked",
+      "Sometimes noticed",
+      "Always celebrated"
+    ]
+  },
+  {
+    "day": "2026-11-27",
+    "title": "Imaginary Store Deals",
+    "prompt": "Invent ridiculous items for a fictional sale.",
+    "rowAxisTitle": "Usefulness",
+    "columnAxisTitle": "Discount temptation",
+    "rowLabels": [
+      "Need it",
+      "Someday maybe",
+      "Absolutely useless"
+    ],
+    "columnLabels": [
+      "Still too much",
+      "Fair price",
+      "Cannot resist"
+    ]
+  },
+  {
+    "day": "2026-11-28",
+    "title": "Couch Co-op Cast",
+    "prompt": "Pick characters to join a shared game session.",
+    "rowAxisTitle": "Skill",
+    "columnAxisTitle": "Playing style",
+    "rowLabels": [
+      "Carries the team",
+      "Learning",
+      "Presses every button"
+    ],
+    "columnLabels": [
+      "Helpful",
+      "Competitive",
+      "Comic relief"
+    ]
+  },
+  {
+    "day": "2026-11-29",
+    "title": "Perfect Lazy Sunday",
+    "prompt": "Choose activities for an unhurried day.",
+    "rowAxisTitle": "Comfort",
+    "columnAxisTitle": "Ambition",
+    "rowLabels": [
+      "Blissful",
+      "Pretty pleasant",
+      "Secretly tiring"
+    ],
+    "columnLabels": [
+      "Bare minimum",
+      "A small project",
+      "Big plans"
+    ]
+  },
+  {
+    "day": "2026-11-30",
+    "title": "December Preview",
+    "prompt": "Sort things your group wants to do next month.",
+    "rowAxisTitle": "Excitement",
+    "columnAxisTitle": "Planning",
+    "rowLabels": [
+      "Cannot wait",
+      "Sounds nice",
+      "Maybe skip"
+    ],
+    "columnLabels": [
+      "Spontaneous",
+      "Book ahead",
+      "Start preparing now"
+    ]
+  }
+]
