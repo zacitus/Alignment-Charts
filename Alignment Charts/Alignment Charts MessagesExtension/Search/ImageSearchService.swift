@@ -30,6 +30,7 @@ enum ImageSearchService {
             "gsrnamespace": commons ? "6" : "0"
         ]
         if commons {
+            // Wikimedia Commons hosts only freely-licensed media by policy, so no license filter is needed here.
             parameters.merge([
                 "prop": "imageinfo", "iiprop": "url|mime",
                 "iiurlwidth": "600", "iiurlheight": "600"
@@ -38,7 +39,7 @@ enum ImageSearchService {
         } else {
             parameters.merge([
                 "prop": "pageimages|info", "piprop": "thumbnail",
-                "pithumbsize": "600", "pilicense": "any", "inprop": "url"
+                "pithumbsize": "600", "pilicense": "free", "inprop": "url"
             ]) { _, new in new }
         }
         components.queryItems = parameters.map { URLQueryItem(name: $0.key, value: $0.value) }
