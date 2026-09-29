@@ -31,7 +31,7 @@ struct TierChartView: View {
                 .foregroundStyle(.black)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
-                .frame(width: labelColumnWidth, minHeight: chipSize, alignment: .center)
+                .frame(width: labelColumnWidth, alignment: .center).frame(minHeight: chipSize, alignment: .center)
                 .background(row.color.swiftUIColor())
             chipGrid(row.items)
                 .frame(maxWidth: .infinity, alignment: .leading)
