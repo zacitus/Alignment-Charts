@@ -9,6 +9,8 @@ struct UnrankedTrayView: View {
     var allTiers: [(id: UUID, label: String)] = []
     var onMoveToTier: (UUID, UUID) -> Bool = { _, _ in false }
     var onReorder: ((UUID, Int) -> Void)? = nil
+    var aiSuggestionsAvailable: Bool = false
+    var onAIRequest: () -> Void = {}
 
     @State private var isDropTarget = false
     @State private var insertionIndex: Int?
@@ -18,6 +20,11 @@ struct UnrankedTrayView: View {
             HStack {
                 Text("Unranked").font(.headline)
                 Spacer()
+                if aiSuggestionsAvailable {
+                    Button(action: onAIRequest) { Image(systemName: "sparkles") }
+                        .frame(minWidth: 44, minHeight: 44)
+                        .accessibilityLabel("Generate AI suggestions")
+                }
                 Button(action: onAdd) { Image(systemName: "plus") }
                     .frame(minWidth: 44, minHeight: 44)
                     .accessibilityLabel("Add item to Unranked")

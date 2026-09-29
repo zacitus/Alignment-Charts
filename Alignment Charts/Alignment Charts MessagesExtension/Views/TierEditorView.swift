@@ -14,6 +14,7 @@ struct TierEditorView: View {
     @State private var tierToDelete: UUID?
     @State private var showsDeleteConfirmation = false
     @State private var inlineNote: TierInlineNote?
+    @State private var showsAISheet = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(
@@ -62,8 +63,16 @@ struct TierEditorView: View {
                         onMoveToUnranked: { moveItem($0, to: TierMoveDestination.unranked.id) },
                         allTiers: allTiers,
                         onMoveToTier: { moveItem($0, to: $1) },
-                        onReorder: reorderItem
+                        onReorder: reorderItem,
+                        aiSuggestionsAvailable: AISuggestionsService.isAvailable,
+                        onAIRequest: {
+                            guard !isSending else { return }
+                            showsAISheet = true
+                        }
                     )
+                    .sheet(isPresented: $showsAISheet) {
+                        AISuggestionsSheet(onGenerate: addGeneratedSuggestions)
+                    }
                     .padding(.top, 16)
                     if let inlineNote {
                         Text(inlineNote.message)
@@ -323,6 +332,20 @@ struct TierEditorView: View {
         let cell = ChartCell()
         tier.unranked.append(cell)
         selectedCell = TierCellSelection(id: cell.id)
+    }
+
+    private func addGeneratedSuggestions(_ suggestions: [String]) {
+        guard !isSending else { return }
+        let room = max(0, TierState.maxUnrankedItems - tier.unranked.count)
+        guard room > 0 else {
+            showNote("Unranked is full")
+            return
+        }
+        for caption in suggestions.prefix(room) {
+            var cell = ChartCell()
+            cell.caption = caption
+            tier.unranked.append(cell)
+        }
     }
 
     private func selectCell(_ id: UUID) {
