@@ -11,26 +11,60 @@ struct RootView: View {
                     Text("Loading chart…")
                         .foregroundStyle(.secondary)
                 }
-            } else if let visibleChart = coordinator.chart {
-                ChartEditorView(
-                    chart: Binding(
-                        get: { coordinator.chart ?? visibleChart },
-                        set: { updatedChart in
-                            guard coordinator.chart != nil, !coordinator.isSending, coordinator.mergeReview == nil else { return }
-                            var timestampedChart = updatedChart
-                            timestampedChart.updatedAt = .now
-                            coordinator.chart = timestampedChart
-                            coordinator.persistDraft(timestampedChart)
-                        }
-                    ),
-                    isNewChart: coordinator.isCreatingNewChart,
-                    isSending: coordinator.isSending,
-                    onClose: coordinator.closeChart,
-                    onShare: coordinator.shareCurrentChart,
-                    dailyStore: coordinator.dailyStore,
-                    canClaimDaily: coordinator.claimableChart?.id == visibleChart.id,
-                    onClaimDaily: coordinator.retryDailyClaim
-                )
+            } else if coordinator.unknownKindInterstitial {
+                VStack(spacing: 16) {
+                    Text("This chart needs a newer version of Alignment Charts.")
+                        .multilineTextAlignment(.center)
+                    Button("Close", action: coordinator.closeChart)
+                }
+                .padding()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if let content = coordinator.activeContent {
+                switch content {
+                case .grid(let visibleChart):
+                    ChartEditorView(
+                        chart: Binding(
+                            get: {
+                                guard case .grid(let chart) = coordinator.activeContent else { return visibleChart }
+                                return chart
+                            },
+                            set: { updatedChart in
+                                guard coordinator.activeContent != nil, !coordinator.isSending, coordinator.mergeReview == nil else { return }
+                                guard case .grid(let current) = coordinator.activeContent, current.id == visibleChart.id else { return }
+                                let touched = ChartContent.grid(updatedChart).withUpdatedAt(.now)
+                                coordinator.activeContent = touched
+                                coordinator.persistDraft(touched)
+                            }
+                        ),
+                        isNewChart: coordinator.isCreatingNewChart,
+                        isSending: coordinator.isSending,
+                        onClose: coordinator.closeChart,
+                        onShare: coordinator.shareCurrentChart,
+                        dailyStore: coordinator.dailyStore,
+                        canClaimDaily: coordinator.claimableChart?.id == visibleChart.id,
+                        onClaimDaily: coordinator.retryDailyClaim
+                    )
+                case .tier(let visibleTier):
+                    TierEditorView(
+                        tier: Binding(
+                            get: {
+                                guard case .tier(let tier) = coordinator.activeContent else { return visibleTier }
+                                return tier
+                            },
+                            set: { updatedTier in
+                                guard coordinator.activeContent != nil, !coordinator.isSending, coordinator.mergeReview == nil else { return }
+                                guard case .tier(let current) = coordinator.activeContent, current.id == visibleTier.id else { return }
+                                let touched = ChartContent.tier(updatedTier).withUpdatedAt(.now)
+                                coordinator.activeContent = touched
+                                coordinator.persistDraft(touched)
+                            }
+                        ),
+                        isNewChart: coordinator.isCreatingNewChart,
+                        isSending: coordinator.isSending,
+                        onClose: coordinator.closeChart,
+                        onShare: coordinator.shareCurrentChart
+                    )
+                }
             } else {
                 ChartHomeView(coordinator: coordinator)
             }
@@ -57,12 +91,21 @@ struct RootView: View {
 private struct ChartHomeView: View {
     @ObservedObject var coordinator: ChartCoordinator
 
-    private var completedCharts: [ChartState] {
-        coordinator.history.filter(\.isComplete)
+    @State private var showsNewChartDialog = false
+
+    private func isComplete(_ content: ChartContent) -> Bool {
+        switch content {
+        case .grid(let chart): return chart.isComplete
+        case .tier(let tier): return tier.isFullyRanked
+        }
     }
 
-    private var inProgressCharts: [ChartState] {
-        coordinator.history.filter { !$0.isComplete }
+    private var completedCharts: [ChartContent] {
+        coordinator.history.filter { isComplete($0) }
+    }
+
+    private var inProgressCharts: [ChartContent] {
+        coordinator.history.filter { !isComplete($0) }
     }
 
     var body: some View {
@@ -95,8 +138,8 @@ private struct ChartHomeView: View {
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .overlay(alignment: .bottom) {
-            Button(action: coordinator.createChart) {
-                Label("New Alignment Chart", systemImage: "plus.square")
+            Button { showsNewChartDialog = true } label: {
+                Label("New Chart", systemImage: "plus.square")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
@@ -107,12 +150,21 @@ private struct ChartHomeView: View {
             .padding(.horizontal)
             .padding(.vertical, 8)
         }
+        .confirmationDialog("New chart", isPresented: $showsNewChartDialog, titleVisibility: .visible) {
+            Button(action: coordinator.createChart) {
+                Label("Alignment chart", systemImage: "square.grid.3x3")
+            }
+            Button(action: coordinator.createTierChart) {
+                Label("Tier chart", systemImage: "list.bullet.rectangle")
+            }
+            Button("Cancel", role: .cancel) { }
+        }
     }
 
     private func chartSection(
         title: String,
         systemImage: String,
-        charts: [ChartState],
+        charts: [ChartContent],
         showsSaveButton: Bool,
         emptyTitle: String,
         emptyMessage: String
@@ -130,7 +182,7 @@ private struct ChartHomeView: View {
                     } else {
                         ForEach(charts) { chart in
                             ChartCardView(
-                                chart: chart,
+                                content: chart,
                                 showsSaveButton: showsSaveButton,
                                 onOpen: { coordinator.openHistory(chart) }
                             )
@@ -158,27 +210,50 @@ private struct ChartHomeView: View {
 }
 
 private struct ChartCardView: View {
-    let chart: ChartState
+    let content: ChartContent
     let showsSaveButton: Bool
     let onOpen: () -> Void
 
     @State private var isSaveFeedbackActive = false
 
     private var displayTitle: String {
-        chart.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        content.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             ? "Untitled Chart"
-            : chart.title
+            : content.title
     }
 
-    private var remainingCellCount: Int {
-        max(chart.cells.count - chart.filledCellCount, 0)
+    private var progressText: String? {
+        switch content {
+        case .grid(let chart):
+            return chart.isComplete ? nil : "\(max(chart.cells.count - chart.filledCellCount, 0)) left"
+        case .tier(let tier):
+            return "\(tier.rankedItemCount) of \(tier.totalItemCount) ranked"
+        }
+    }
+
+    @ViewBuilder private var thumbnail: some View {
+        switch content {
+        case .grid(let chart): ChartThumbnailView(chart: chart)
+        case .tier(let tier):
+            TierThumbnailView(tier: tier)
+                .overlay(alignment: .topLeading) {
+                    TierBadge().padding(6)
+                }
+        }
+    }
+
+    private var accessibilityHint: String {
+        switch content {
+        case .grid: return "Opens this alignment chart"
+        case .tier: return "Opens this tier chart"
+        }
     }
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             Button(action: onOpen) {
                 VStack(alignment: .leading, spacing: 0) {
-                    ChartThumbnailView(chart: chart)
+                    thumbnail
                         .frame(height: 144)
                         .frame(maxWidth: .infinity)
                         .background(Color(uiColor: .secondarySystemBackground))
@@ -190,13 +265,13 @@ private struct ChartCardView: View {
                             .lineLimit(1)
 
                         HStack(spacing: 7) {
-                            if !chart.isComplete {
-                                Text("\(remainingCellCount) left")
+                            if let progressText {
+                                Text(progressText)
                                     .foregroundStyle(.blue)
                                 Text("|")
                                     .foregroundStyle(.tertiary)
                             }
-                            Text(chart.updatedAt, format: .relative(presentation: .named))
+                            Text(content.updatedAt, format: .relative(presentation: .named))
                                 .foregroundStyle(.secondary)
                         }
                         .font(.caption)
@@ -217,11 +292,11 @@ private struct ChartCardView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(displayTitle)
-            .accessibilityHint("Opens this alignment chart")
+            .accessibilityHint(accessibilityHint)
 
             if showsSaveButton {
                 ChartSaveButton(
-                    chart: chart,
+                    content: content,
                     onActivityChange: { isSaveFeedbackActive = $0 }
                 )
                     .font(.title2)
