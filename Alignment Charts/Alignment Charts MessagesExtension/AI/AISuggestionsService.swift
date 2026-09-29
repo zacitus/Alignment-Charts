@@ -1,4 +1,5 @@
 import FoundationModels
+import Foundation
 
 @Generable
 struct SuggestionList {
