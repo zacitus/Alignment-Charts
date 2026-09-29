@@ -28,7 +28,7 @@ class MessagesViewController: MSMessagesAppViewController {
         view.addSubview(hosting.view)
         hosting.didMove(toParent: self)
 
-        coordinator.$chart
+        coordinator.$activeContent
             .map { $0 == nil }
             .removeDuplicates()
             .sink { [weak hosting] isShowingHome in

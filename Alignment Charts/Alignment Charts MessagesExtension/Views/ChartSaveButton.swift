@@ -1,8 +1,9 @@
 import Photos
 import SwiftUI
+import UIKit
 
 struct ChartSaveButton: View {
-    let chart: ChartState
+    let content: ChartContent
     var onActivityChange: (Bool) -> Void = { _ in }
 
     @State private var saveState = SaveState.ready
@@ -40,7 +41,7 @@ struct ChartSaveButton: View {
 
         Task {
             do {
-                try await ChartPhotoSaver.save(chart)
+                try await ChartPhotoSaver.save(content)
                 await showSaveResult(.saved)
             } catch {
                 await showSaveResult(.failed)
@@ -63,24 +64,31 @@ struct ChartSaveButton: View {
 @MainActor
 enum ChartPhotoSaver {
     private enum SaveError: LocalizedError {
-        case accessDenied
-        case renderingFailed
+        case accessDenied(ChartKind)
+        case renderingFailed(ChartKind)
 
         var errorDescription: String? {
             switch self {
-            case .accessDenied: "Allow Photos access to save alignment charts."
-            case .renderingFailed: "The chart image couldn’t be created."
+            case .accessDenied(.grid): "Allow Photos access to save alignment charts."
+            case .accessDenied(.tier): "Allow Photos access to save tier charts."
+            case .renderingFailed(.grid): "The chart image couldn’t be created."
+            case .renderingFailed(.tier): "The tier chart image couldn't be created."
             }
         }
     }
 
-    static func save(_ chart: ChartState) async throws {
+    static func save(_ content: ChartContent) async throws {
         let authorization = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
         guard authorization == .authorized || authorization == .limited else {
-            throw SaveError.accessDenied
+            throw SaveError.accessDenied(content.kind)
         }
-        guard let image = ChartImageRenderer.render(chart) else {
-            throw SaveError.renderingFailed
+        let renderedImage: UIImage?
+        switch content {
+        case .grid(let chart): renderedImage = ChartImageRenderer.render(chart)
+        case .tier(let tier): renderedImage = TierImageRenderer.render(tier)
+        }
+        guard let image = renderedImage else {
+            throw SaveError.renderingFailed(content.kind)
         }
 
         try await PHPhotoLibrary.shared().performChanges {
