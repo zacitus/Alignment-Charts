@@ -89,7 +89,16 @@ private struct FlowLayout: Layout {
     ) {
         let laidOut = layout(width: bounds.width, subviews: subviews)
         for (index, subview) in subviews.enumerated() {
-            subview.place(at: laidOut.origins[index], anchor: .topLeading, proposal: .unspecified)
+            // placeSubviews must honor the bounds origin: the layout's local
+            // coordinates start at (0,0), but the container may assign a
+            // non-zero rect (each tier row gets its own). Dropping the origin
+            // piles every row's chips at the canvas top-left.
+            let origin = laidOut.origins[index]
+            subview.place(
+                at: CGPoint(x: bounds.minX + origin.x, y: bounds.minY + origin.y),
+                anchor: .topLeading,
+                proposal: .unspecified
+            )
         }
     }
 

@@ -72,18 +72,27 @@ enum ImageSearchService {
         return UIImage(cgImage: image)
     }
 
+    // Dedicated session with a real wall-clock deadline. URLSession.shared
+    // leaves timeoutIntervalForResource at 7 days, so a stalled thumbnail
+    // stream hangs the attach task forever: imageSelection never clears, and
+    // every result button plus the whole Edit Cell form stays disabled with
+    // no error shown. A 30s resource cap guarantees the task ends, the catch
+    // sets imageError, and the UI unlocks.
+    private static let session: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 20
+        config.timeoutIntervalForResource = 30
+        return URLSession(configuration: config)
+    }()
+
     private static func download(_ url: URL, maxBytes: Int) async throws -> Data {
-        var request = URLRequest(url: url, timeoutInterval: 20)
+        var request = URLRequest(url: url)
         request.setValue("AlignmentCharts/1.0 (iOS image picker)", forHTTPHeaderField: "User-Agent")
-        let (bytes, response) = try await URLSession.shared.bytes(for: request)
-        guard let response = response as? HTTPURLResponse,
-              (200..<300).contains(response.statusCode),
-              response.expectedContentLength <= maxBytes else { throw URLError(.badServerResponse) }
-        var data = Data()
-        for try await byte in bytes {
-            guard data.count < maxBytes else { throw URLError(.dataLengthExceedsMaximum) }
-            data.append(byte)
-        }
+        let (data, response) = try await session.data(for: request)
+        guard let http = response as? HTTPURLResponse,
+              (200..<300).contains(http.statusCode),
+              http.expectedContentLength <= maxBytes,
+              data.count <= maxBytes else { throw URLError(.badServerResponse) }
         return data
     }
 
