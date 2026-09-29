@@ -12,6 +12,9 @@ container `iCloud.name.zachsmith.Alignment-Charts`:
 
 - A `Chart` record: the chart's JSON payload (grid text, labels, image
   references), addressed directly by the chart's UUID as the record name.
+  Tier charts are stored the same way, as `Chart` records whose payload is
+  the kind-tagged `ChartContent.tier` JSON (tier labels, items, and image
+  references), addressed by the tier chart's UUID as the record name.
 - `ChartImage` records: photo assets attached to chart cells. Cell images can
   come from the device camera, the photo library, or the built-in
   Wikipedia/Wikimedia Commons image search.

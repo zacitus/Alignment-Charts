@@ -128,6 +128,7 @@ struct CollaborationTests {
         }
         try await testSaveRaces(base)
         try testDraftPersistence()
+        try testTierContentPayload()
         print("PASS: \(checks) collaboration checks")
     }
 
@@ -251,5 +252,67 @@ struct CollaborationTests {
         try data.write(to: ChartHistoryStore.directory.appendingPathComponent(base.id.uuidString + ".json"))
         ChartHistoryStore.receive(incoming, in: scope)
         expect(ChartHistoryStore.pendingDraft(for: base.id)?.chart == draft && ChartHistoryStore.baseline(for: base.id) == nil, "legacy draft stays intact and requires explicit review")
+    }
+
+    static func testTierContentPayload() throws {
+        // Tier charts ride the same CloudKit Chart record as grids; the kind tag
+        // in ChartContent JSON is what tells the fetch path how to decode it.
+        var tier = TierState.makeDefault()
+        expect(tier.isValid, "default tier chart is valid")
+        tier.title = "Fast food"
+        var wendys = ChartCell()
+        wendys.caption = "Wendy's"
+        var shack = ChartCell()
+        shack.caption = "Shake Shack"
+        tier.tiers[0].items = [wendys, shack]
+        var arbys = ChartCell()
+        arbys.caption = "Arby's"
+        tier.unranked = [arbys]
+        let tierPayload = try JSONEncoder().encode(ChartContent.tier(tier))
+        expect(String(decoding: tierPayload, as: UTF8.self).contains("\"kind\":\"tier\""), "tier payload carries the tier kind tag")
+        let decoded = try JSONDecoder().decode(ChartContent.self, from: tierPayload)
+        expect(decoded.kind == .tier, "decoded content keeps the tier kind")
+        expect(decoded.hasSameContent(as: .tier(tier)), "tier chart survives the CloudKit payload round trip")
+        let gridPayload = try JSONEncoder().encode(ChartContent.grid(ChartState()))
+        expect(String(decoding: gridPayload, as: UTF8.self).contains("\"kind\":\"grid\""), "grid payload carries the grid kind tag")
+
+        // TierState.isValid boundary checks the sync layer relies on.
+        var twoTiers = TierState.makeDefault()
+        twoTiers.setTierCount(2)
+        expect(twoTiers.isValid, "two tiers is the minimum")
+        var eightTiers = TierState.makeDefault()
+        eightTiers.setTierCount(8)
+        expect(eightTiers.isValid, "eight tiers is the maximum")
+        var oneTier = TierState.makeDefault()
+        oneTier.tiers = [oneTier.tiers[0]]
+        expect(!oneTier.isValid, "one tier is below the minimum")
+        var nineTiers = TierState.makeDefault()
+        nineTiers.tiers += (0..<3).map { _ in Tier(label: "X", color: TierColor.defaultPalette[0], items: []) }
+        expect(!nineTiers.isValid, "nine tiers is above the maximum")
+        var dupTiers = TierState.makeDefault()
+        dupTiers.tiers[1].id = dupTiers.tiers[0].id
+        expect(!dupTiers.isValid, "duplicate tier ids are rejected")
+        var fullTier = TierState.makeDefault()
+        fullTier.tiers[0].items = (0..<TierState.maxItemsPerTier).map { _ in ChartCell() }
+        expect(fullTier.isValid, "a tier at the item cap is valid")
+        fullTier.tiers[0].items.append(ChartCell())
+        expect(!fullTier.isValid, "a tier over the item cap is invalid")
+        var fullUnranked = TierState.makeDefault()
+        fullUnranked.unranked = (0..<TierState.maxUnrankedItems).map { _ in ChartCell() }
+        expect(fullUnranked.isValid, "unranked at the cap is valid")
+        fullUnranked.unranked.append(ChartCell())
+        expect(!fullUnranked.isValid, "unranked over the cap is invalid")
+        var dupItems = TierState.makeDefault()
+        let dup = ChartCell()
+        dupItems.tiers[0].items = [dup]
+        dupItems.unranked = [dup]
+        expect(!dupItems.isValid, "an item id in both a tier and unranked is rejected")
+        var crowded = TierState.makeDefault()
+        crowded.setTierCount(4)
+        for i in 0..<4 { crowded.tiers[i].items = (0..<TierState.maxItemsPerTier).map { _ in ChartCell() } }
+        crowded.unranked = (0..<4).map { _ in ChartCell() }
+        expect(crowded.isValid, "exactly 100 total items is valid")
+        crowded.unranked.append(ChartCell())
+        expect(!crowded.isValid, "over 100 total items is invalid")
     }
 }

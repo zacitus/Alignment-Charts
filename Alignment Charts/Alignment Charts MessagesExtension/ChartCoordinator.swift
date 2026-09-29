@@ -52,14 +52,21 @@ final class ChartCoordinator: ObservableObject {
         ChartHistoryStore.unhide(chartUUID, in: newScope)
         refreshHistory()
 
-        // Tier-chart sync arrives in P1; the CloudKit fetch below only knows grid charts.
-        guard MessageComposer.chartKind(from: message) == .grid else { return }
-
-        Task {
-            guard let incoming = try? await CloudKitChartService.shared.fetchChart(id: chartID),
-                  conversationScope == newScope else { return }
-            ChartHistoryStore.receive(.grid(incoming), in: newScope)
-            refreshHistory()
+        switch MessageComposer.chartKind(from: message) {
+        case .grid:
+            Task {
+                guard let incoming = try? await CloudKitChartService.shared.fetchChart(id: chartID),
+                      conversationScope == newScope else { return }
+                ChartHistoryStore.receive(.grid(incoming), in: newScope)
+                refreshHistory()
+            }
+        case .tier:
+            Task {
+                guard let incoming = try? await CloudKitChartService.shared.fetchTierChart(id: chartID),
+                      conversationScope == newScope else { return }
+                ChartHistoryStore.receive(.tier(incoming), in: newScope)
+                refreshHistory()
+            }
         }
     }
 
@@ -280,25 +287,33 @@ final class ChartCoordinator: ObservableObject {
         }
     }
 
-    /// Tier share path: local render + message insert only. Never touches CloudKit.
+    /// Tier share path: upload to CloudKit, then render the bubble and insert the message.
+    /// Mirrors the grid share flow; tier charts have no merge-review step.
     private func tierShare(_ tier: TierState, conversation: MSConversation, session: MSSession?, editor: UUID) async {
-        // P1: upload TierChart record via CloudKitChartService before insert.
-        guard editingID == editor, conversationScope != nil else { return }
+        guard let scope = conversationScope, editingID == editor else { return }
         guard tier.rankedItemCount > 0 else {
             errorMessage = "Rank at least one item before sharing."
             return
         }
-        guard let preview = TierImageRenderer.render(tier) else {
-            errorMessage = "This tier chart is too large to share. Try fewer tiers or items."
-            return
-        }
-        let message = MessageComposer.message(for: .tier(tier), image: preview, session: session)
         do {
+            // Wait for the real upload outcome before touching local state or the message.
+            let saved = try await CloudKitChartService.shared.uploadTier(tier)
+            ChartHistoryStore.save(.tier(saved), base: .tier(saved), in: scope)
+            guard editingID == editor, conversationScope == scope else { return }
+            editingBase = .tier(saved)
+            activeContent = .tier(saved)
+            refreshHistory()
+            guard let preview = TierImageRenderer.render(saved) else {
+                errorMessage = "This tier chart is too large to share. Try fewer tiers or items."
+                return
+            }
+            let message = MessageComposer.message(for: .tier(saved), image: preview, session: session)
             try await conversation.insert(message)
-            guard editingID == editor else { return }
+            guard editingID == editor, conversationScope == scope else { return }
             activeSession = message.session
             controller?.dismiss()
         } catch {
+            guard editingID == editor, conversationScope == scope else { return }
             errorMessage = "Couldn’t share the tier chart. \(error.localizedDescription)"
         }
     }
@@ -358,25 +373,47 @@ final class ChartCoordinator: ObservableObject {
         }
     }
 
-    /// P0 loads tier charts from local history only. P1 replaces the store
-    /// lookup below with a CloudKit TierChart fetch.
-    private func loadTierChart(id: String, conversationScope: String) {
-        isLoading = true
-        controller?.requestPresentationStyle(.expanded)
-        guard let uuid = UUID(uuidString: id),
-              let saved = ChartHistoryStore.savedVersion(for: uuid) else {
-            errorMessage = "Couldn't load this tier chart on this device yet — tier sync arrives in the next update."
-            isLoading = false
-            return
-        }
+    /// Loads a tier chart: local-store fast path, CloudKit slow path.
+    /// Mirrors loadSharedChart's editor-guard pattern.
+    private func loadTierChart(id: String, conversationScope requestedScope: String) {
         editingID = UUID()
+        let editor = editingID
         claimableChart = nil
         mergeReview = nil
         isCreatingNewChart = false
-        editingBase = saved.base
-        activeContent = saved.content
-        persistDraft(saved.content)
-        isLoading = false
+        isLoading = true
+        controller?.requestPresentationStyle(.expanded)
+
+        // Fast path: a chart stored on this device loads without a network round trip.
+        if let uuid = UUID(uuidString: id),
+           let saved = ChartHistoryStore.savedVersion(for: uuid) {
+            editingBase = saved.base
+            activeContent = saved.content
+            persistDraft(saved.content)
+            if editingID == editor, conversationScope == requestedScope {
+                isLoading = false
+            }
+            return
+        }
+
+        // Slow path: this device has never seen this tier chart — fetch it from CloudKit.
+        Task {
+            do {
+                let incoming = try await CloudKitChartService.shared.fetchTierChart(id: id)
+                guard editingID == editor, conversationScope == requestedScope, loadedMessageID == id else { return }
+                ChartHistoryStore.receive(.tier(incoming), in: requestedScope)
+                editingBase = .tier(incoming)
+                activeContent = .tier(incoming)
+                persistDraft(.tier(incoming))
+            } catch {
+                guard editingID == editor, conversationScope == requestedScope, loadedMessageID == id else { return }
+                errorMessage = "Couldn't load this tier chart. \(error.localizedDescription)"
+                loadedMessageID = nil
+            }
+            if editingID == editor, conversationScope == requestedScope {
+                isLoading = false
+            }
+        }
     }
 
     private func refreshHistory() {

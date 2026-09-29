@@ -71,7 +71,7 @@ final class CloudKitChartService {
             } commit: { merged, version in
                 // Public database writes aren't a multi-record transaction. Finish
                 // immutable assets FIRST, then publish their references in one CAS save.
-                try await self.prepareImages(for: merged)
+                try await self.prepareImages(cells: merged.cells, chartID: merged.id)
                 try Task.checkCancellation()
                 let record = version ?? CKRecord(recordType: Self.chartRecordType, recordID: recordID)
                 var merged = merged
@@ -93,7 +93,7 @@ final class CloudKitChartService {
         } catch let review as ChartMergeReview {
             // Download both alternatives for the conflict comparison without
             // changing any references or overwriting a locally replaced photo.
-            try await downloadImages(for: review.remote)
+            try await downloadImages(cells: review.remote.cells, chartID: review.remote.id)
             throw review
         }
     }
@@ -101,8 +101,42 @@ final class CloudKitChartService {
     func fetchChart(id: String) async throws -> ChartState {
         let record = try await database.record(for: CKRecord.ID(recordName: id))
         let chart = try decode(record)
-        try await downloadImages(for: chart)
+        try await downloadImages(cells: chart.cells, chartID: chart.id)
         return chart
+    }
+
+    /// Tier upload is last-writer-wins: there is no `ChartMerge` for tier charts in P1.
+    /// On `.serverRecordChanged` the loop refetches and re-commits the local tier, up to
+    /// 5 attempts, then throws `ChartSyncError.busy`.
+    func uploadTier(_ tier: TierState) async throws -> TierState {
+        guard tier.isValid else { throw ChartSyncError.invalidChart }
+        let recordID = CKRecord.ID(recordName: tier.id.uuidString)
+        for _ in 0..<5 {
+            try Task.checkCancellation()
+            let version = try await self.recordIfPresent(recordID)
+            let record = version ?? CKRecord(recordType: Self.chartRecordType, recordID: recordID)
+            var uploaded = tier
+            uploaded.updatedAt = .now
+            let tierCells = uploaded.tiers.flatMap { $0.items } + uploaded.unranked
+            try await self.prepareImages(cells: tierCells, chartID: uploaded.id)
+            try Task.checkCancellation()
+            let payload = try JSONEncoder().encode(ChartContent.tier(uploaded))
+            record[Self.payloadKey] = String(decoding: payload, as: UTF8.self)
+            do {
+                try await self.save(record)
+            } catch let error as CKError where error.code == .serverRecordChanged {
+                continue
+            }
+            return uploaded
+        }
+        throw ChartSyncError.busy
+    }
+
+    func fetchTierChart(id: String) async throws -> TierState {
+        let record = try await database.record(for: CKRecord.ID(recordName: id))
+        let tier = try decodeTier(record)
+        try await downloadImages(cells: tier.tiers.flatMap { $0.items } + tier.unranked, chartID: tier.id)
+        return tier
     }
 
     private func decode(_ record: CKRecord) throws -> ChartState {
@@ -115,6 +149,16 @@ final class CloudKitChartService {
             throw ChartSyncError.invalidChart
         }
         return chart
+    }
+
+    private func decodeTier(_ record: CKRecord) throws -> TierState {
+        guard let json = record[Self.payloadKey] as? String else { throw ChartServiceError.malformedRecord }
+        let content = try JSONDecoder().decode(ChartContent.self, from: Data(json.utf8))
+        guard case .tier(let tier) = content else { throw ChartServiceError.malformedRecord }
+        guard tier.isValid, tier.id.uuidString == record.recordID.recordName else {
+            throw ChartSyncError.invalidChart
+        }
+        return tier
     }
 
     private func recordIfPresent(_ id: CKRecord.ID) async throws -> CKRecord? {
@@ -154,13 +198,13 @@ final class CloudKitChartService {
         return records
     }
 
-    private func prepareImages(for chart: ChartState) async throws {
-        let cells = chart.cells.filter(\.hasImage)
-        let existing = try await fetchImageRecords(cells, chartID: chart.id)
+    private func prepareImages(cells allCells: [ChartCell], chartID: UUID) async throws {
+        let cells = allCells.filter(\.hasImage)
+        let existing = try await fetchImageRecords(cells, chartID: chartID)
         var uploads: [CKRecord.ID: CKRecord] = [:]
         for cell in cells {
             try Task.checkCancellation()
-            let id = imageRecordID(chartID: chart.id, imageID: cell.imageStorageID)
+            let id = imageRecordID(chartID: chartID, imageID: cell.imageStorageID)
             if let record = existing[id] {
                 try cacheImage(record, cell: cell)
                 continue
@@ -176,7 +220,7 @@ final class CloudKitChartService {
                 saving: Array(uploads.values), deleting: [], savePolicy: .ifServerRecordUnchanged, atomically: false
             )
             for cell in cells {
-                let id = imageRecordID(chartID: chart.id, imageID: cell.imageStorageID)
+                let id = imageRecordID(chartID: chartID, imageID: cell.imageStorageID)
                 guard uploads[id] != nil else { continue }
                 guard let result = results[id] else { throw ChartServiceError.missingImage }
                 do {
@@ -191,13 +235,13 @@ final class CloudKitChartService {
         // Keep old assets: another editor's baseline or unresolved conflict may need them.
     }
 
-    private func downloadImages(for chart: ChartState) async throws {
-        let cells = chart.cells.filter { cell in
+    private func downloadImages(cells allCells: [ChartCell], chartID: UUID) async throws {
+        let cells = allCells.filter { cell in
             cell.hasImage && (cell.imageID == nil || !FileManager.default.fileExists(atPath: ImageStore.url(for: cell.imageStorageID).path))
         }
-        let records = try await fetchImageRecords(cells, chartID: chart.id)
+        let records = try await fetchImageRecords(cells, chartID: chartID)
         for cell in cells {
-            guard let record = records[imageRecordID(chartID: chart.id, imageID: cell.imageStorageID)] else {
+            guard let record = records[imageRecordID(chartID: chartID, imageID: cell.imageStorageID)] else {
                 throw ChartServiceError.missingImage
             }
             try cacheImage(record, cell: cell)
