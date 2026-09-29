@@ -1,5 +1,5 @@
 # ci_scripts
-
+<!-- trigger Xcode Cloud scheme rescan -->
 `ci_post_clone.sh` stamps `CURRENT_PROJECT_VERSION` in
 `Alignment Charts/Alignment Charts.xcodeproj/project.pbxproj` with Xcode Cloud's
 `CI_BUILD_NUMBER` right after checkout, before Xcode reads the project. This
