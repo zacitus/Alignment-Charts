@@ -7,7 +7,9 @@ sources_dir="$project_dir/Alignment Charts MessagesExtension"
 xcrun swiftc -parse-as-library \
   "$sources_dir/Models/ChartCell.swift" \
   "$sources_dir/Models/ChartState.swift" \
+  "$sources_dir/Models/TierState.swift" \
   "$sources_dir/Models/ChartMerge.swift" \
+  "$sources_dir/Models/TierMerge.swift" \
   "$sources_dir/Daily/DailyModels.swift" \
   "$project_dir/Tests/DailyTests.swift" \
   -o "$test_dir/daily-tests"

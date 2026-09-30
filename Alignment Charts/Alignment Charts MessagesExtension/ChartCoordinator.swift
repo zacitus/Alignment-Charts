@@ -13,7 +13,7 @@ final class ChartCoordinator: ObservableObject {
     @Published var isLoading = false
     @Published var isSending = false
     @Published var errorMessage: String?
-    @Published var mergeReview: ChartMergeReview?
+    @Published var mergeReview: PendingMergeReview?
     @Published var presentationStyle: MSMessagesAppPresentationStyle = .compact
     @Published var isCreatingNewChart = false
     @Published var unknownKindInterstitial = false
@@ -216,19 +216,31 @@ final class ChartCoordinator: ObservableObject {
     }
 
     func resolveConflicts(_ choices: [String: ChartConflictChoice]) {
-        // Merge review is grid-only in P0 — tier charts never produce a review.
-        guard let review = mergeReview,
-              case .grid(let current) = activeContent,
-              current.id == review.local.id else { return }
-        let result = review.merged(choices: choices)
-        guard result.conflicts.isEmpty else { return }
-        // Choices apply only against the version actually shown. If it changes
-        // again, the next upload performs a fresh merge and asks again as needed.
-        editingBase = .grid(review.remote)
-        activeContent = .grid(result.chart)
-        persistDraft(.grid(result.chart))
-        mergeReview = nil
-        shareCurrentChart()
+        guard let review = mergeReview else { return }
+        switch review {
+        case .grid(let gridReview):
+            guard case .grid(let current) = activeContent,
+                  current.id == gridReview.local.id else { return }
+            let result = gridReview.merged(choices: choices)
+            guard result.conflicts.isEmpty else { return }
+            // Choices apply only against the version actually shown. If it changes
+            // again, the next upload performs a fresh merge and asks again as needed.
+            editingBase = .grid(gridReview.remote)
+            activeContent = .grid(result.chart)
+            persistDraft(.grid(result.chart))
+            mergeReview = nil
+            shareCurrentChart()
+        case .tier(let tierReview):
+            guard case .tier(let current) = activeContent,
+                  current.id == tierReview.local.id else { return }
+            let result = tierReview.merged(choices: choices)
+            guard result.conflicts.isEmpty else { return }
+            editingBase = .tier(tierReview.remote)
+            activeContent = .tier(result.tier)
+            persistDraft(.tier(result.tier))
+            mergeReview = nil
+            shareCurrentChart()
+        }
     }
 
     func shareCurrentChart() {
@@ -275,29 +287,38 @@ final class ChartCoordinator: ObservableObject {
                     controller?.dismiss()
                 } catch let review as ChartMergeReview {
                     guard editingID == editor, conversationScope == scope else { return }
-                    mergeReview = review
+                    mergeReview = .grid(review)
                 } catch {
                     guard editingID == editor, conversationScope == scope else { return }
                     errorMessage = "Couldn’t share the chart. \(error.localizedDescription)"
                 }
             case .tier:
                 guard case .tier(let tier) = content else { return }
-                await tierShare(tier, conversation: conversation, session: session, editor: editor)
+                // editingBase is only ever a tier when the active content is one,
+                // but project defensively — a kind mismatch must not crash the send.
+                let tierBase: TierState?
+                if case .tier(let projected) = base {
+                    tierBase = projected
+                } else {
+                    tierBase = nil
+                }
+                await tierShare(tier, base: tierBase, conversation: conversation, session: session, editor: editor, scope: scope)
             }
         }
     }
 
-    /// Tier share path: upload to CloudKit, then render the bubble and insert the message.
-    /// Mirrors the grid share flow; tier charts have no merge-review step.
-    private func tierShare(_ tier: TierState, conversation: MSConversation, session: MSSession?, editor: UUID) async {
-        guard let scope = conversationScope, editingID == editor else { return }
+    /// Tier share path: merge against the editing base and upload to CloudKit,
+    /// then render the bubble and insert the message. Conflicting co-edits
+    /// surface a merge review instead of overwriting.
+    private func tierShare(_ tier: TierState, base: TierState?, conversation: MSConversation, session: MSSession?, editor: UUID, scope: String) async {
+        guard editingID == editor, conversationScope == scope else { return }
         guard tier.rankedItemCount > 0 else {
             errorMessage = "Rank at least one item before sharing."
             return
         }
         do {
             // Wait for the real upload outcome before touching local state or the message.
-            let saved = try await CloudKitChartService.shared.uploadTier(tier)
+            let saved = try await CloudKitChartService.shared.uploadTier(tier, base: base)
             ChartHistoryStore.save(.tier(saved), base: .tier(saved), in: scope)
             guard editingID == editor, conversationScope == scope else { return }
             editingBase = .tier(saved)
@@ -312,6 +333,11 @@ final class ChartCoordinator: ObservableObject {
             guard editingID == editor, conversationScope == scope else { return }
             activeSession = message.session
             controller?.dismiss()
+        } catch let review as TierMergeReview {
+            // The upload awaited above may have outlived this editor or
+            // conversation; never present a review in the wrong scope.
+            guard editingID == editor, conversationScope == scope else { return }
+            mergeReview = .tier(review)
         } catch {
             guard editingID == editor, conversationScope == scope else { return }
             errorMessage = "Couldn’t share the tier chart. \(error.localizedDescription)"
@@ -373,8 +399,10 @@ final class ChartCoordinator: ObservableObject {
         }
     }
 
-    /// Loads a tier chart: local-store fast path, CloudKit slow path.
-    /// Mirrors loadSharedChart's editor-guard pattern.
+    /// Loads a tier chart for co-editing: always fetch the latest server state
+    /// first so concurrent edits merge against a fresh base, exactly like
+    /// loadSharedChart. A pending local draft still wins over the fetched
+    /// record — unsent work is never overwritten.
     private func loadTierChart(id: String, conversationScope requestedScope: String) {
         editingID = UUID()
         let editor = editingID
@@ -383,32 +411,32 @@ final class ChartCoordinator: ObservableObject {
         isCreatingNewChart = false
         isLoading = true
         controller?.requestPresentationStyle(.expanded)
-
-        // Fast path: a chart stored on this device loads without a network round trip.
-        if let uuid = UUID(uuidString: id),
-           let saved = ChartHistoryStore.savedVersion(for: uuid) {
-            editingBase = saved.base
-            activeContent = saved.content
-            persistDraft(saved.content)
-            if editingID == editor, conversationScope == requestedScope {
-                isLoading = false
-            }
-            return
-        }
-
-        // Slow path: this device has never seen this tier chart — fetch it from CloudKit.
         Task {
             do {
                 let incoming = try await CloudKitChartService.shared.fetchTierChart(id: id)
                 guard editingID == editor, conversationScope == requestedScope, loadedMessageID == id else { return }
                 ChartHistoryStore.receive(.tier(incoming), in: requestedScope)
-                editingBase = .tier(incoming)
-                activeContent = .tier(incoming)
-                persistDraft(.tier(incoming))
+                if let draft = ChartHistoryStore.pendingDraft(for: incoming.id) {
+                    editingBase = draft.base
+                    activeContent = draft.content
+                    persistDraft(draft.content)
+                } else {
+                    editingBase = .tier(incoming)
+                    activeContent = .tier(incoming)
+                    persistDraft(.tier(incoming))
+                }
             } catch {
                 guard editingID == editor, conversationScope == requestedScope, loadedMessageID == id else { return }
-                errorMessage = "Couldn't load this tier chart. \(error.localizedDescription)"
-                loadedMessageID = nil
+                // Offline fallback: open the local copy when the server is unreachable.
+                if let uuid = UUID(uuidString: id),
+                   let saved = ChartHistoryStore.savedVersion(for: uuid) {
+                    editingBase = saved.base
+                    activeContent = saved.content
+                    persistDraft(saved.content)
+                } else {
+                    errorMessage = "Couldn't load this tier chart. \(error.localizedDescription)"
+                    loadedMessageID = nil
+                }
             }
             if editingID == editor, conversationScope == requestedScope {
                 isLoading = false

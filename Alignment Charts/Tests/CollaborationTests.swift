@@ -314,5 +314,165 @@ struct CollaborationTests {
         expect(crowded.isValid, "exactly 100 total items is valid")
         crowded.unranked.append(ChartCell())
         expect(!crowded.isValid, "over 100 total items is invalid")
+
+        // MARK: - TierMerge three-way merge
+
+        func tierBase() -> TierState {
+            var t = TierState.makeDefault()
+            var a = ChartCell(); a.caption = "A"
+            var b = ChartCell(); b.caption = "B"
+            var c = ChartCell(); c.caption = "C"
+            t.tiers[0].items = [a, b, c]
+            var u = ChartCell(); u.caption = "U"
+            t.unranked = [u]
+            return t
+        }
+
+        // Disjoint moves and edits merge cleanly, each item exactly once.
+        var tb = tierBase()
+        var tm = tb
+        var ts = tb
+        let aID = tb.tiers[0].items[0].id
+        let uID = tb.unranked[0].id
+        tm.tiers[0].items.remove(at: 0)
+        tm.tiers[1].items = [tb.tiers[0].items[0]]
+        ts.tiers[0].items[1].caption = "B2"
+        ts.unranked.removeAll()
+        ts.tiers[2].items = [tb.unranked[0]]
+        var tresult = TierMerge.merge(base: tb, local: tm, remote: ts)
+        expect(tresult.conflicts.isEmpty, "disjoint tier moves and edits merge")
+        let mergedIDs = tresult.tier.tiers.flatMap { $0.items.map(\.id) } + tresult.tier.unranked.map(\.id)
+        expect(Set(mergedIDs).count == mergedIDs.count, "merged tier chart has no duplicate items")
+        expect(tresult.tier.isValid, "merged tier chart is valid")
+        expect(tresult.tier.tiers[1].items.map(\.id) == [aID], "local move survives")
+        expect(tresult.tier.tiers[2].items.map(\.id) == [uID], "remote move survives")
+        expect(tresult.tier.tiers[0].items.first(where: { $0.caption == "B2" }) != nil, "remote caption edit survives")
+
+        // Same title on both sides conflicts; choices resolve.
+        tb = tierBase(); tm = tb; ts = tb
+        tm.title = "Mine"; ts.title = "Theirs"
+        tresult = TierMerge.merge(base: tb, local: tm, remote: ts)
+        expect(tresult.conflicts.map(\.id) == ["title"], "same title edit conflicts")
+        tresult = TierMerge.merge(base: tb, local: tm, remote: ts, choices: ["title": .mine])
+        expect(tresult.conflicts.isEmpty && tresult.tier.title == "Mine", "title choice applies")
+
+        // Same item moved to different tiers conflicts; choices resolve.
+        tb = tierBase(); tm = tb; ts = tb
+        let movedID = tb.tiers[0].items[0].id
+        tm.tiers[0].items.remove(at: 0); tm.tiers[1].items = [tb.tiers[0].items[0]]
+        ts.tiers[0].items.remove(at: 0); ts.tiers[2].items = [tb.tiers[0].items[0]]
+        tresult = TierMerge.merge(base: tb, local: tm, remote: ts)
+        expect(tresult.conflicts.map(\.id) == ["item-\(movedID.uuidString)-moved"], "same item moved to two tiers conflicts")
+        tresult = TierMerge.merge(base: tb, local: tm, remote: ts, choices: ["item-\(movedID.uuidString)-moved": .mine])
+        expect(tresult.conflicts.isEmpty && tresult.tier.tiers[1].items.map(\.id) == [movedID], "move choice applies")
+
+        // Delete versus edit conflicts; untouched delete wins silently.
+        tb = tierBase(); tm = tb; ts = tb
+        let delID = tb.tiers[0].items[0].id
+        tm.tiers[0].items.remove(at: 0)
+        ts.tiers[0].items[0].caption = "A2"
+        tresult = TierMerge.merge(base: tb, local: tm, remote: ts)
+        expect(tresult.conflicts.map(\.id) == ["item-removed-\(delID.uuidString)"], "delete versus edit conflicts")
+        tresult = TierMerge.merge(base: tb, local: tm, remote: ts, choices: ["item-removed-\(delID.uuidString)": .shared])
+        expect(tresult.conflicts.isEmpty, "delete conflict resolves")
+        expect(tresult.tier.tiers[0].items.first(where: { $0.id == delID })?.caption == "A2", "kept side of delete conflict survives")
+        tm = tb; ts = tb
+        tm.tiers[0].items.remove(at: 0)
+        tresult = TierMerge.merge(base: tb, local: tm, remote: ts)
+        expect(tresult.conflicts.isEmpty, "uncontested delete merges silently")
+
+        // Tier removed by one side spills its items to unranked, no conflict.
+        tb = tierBase(); tm = tb; ts = tb
+        tm.setTierCount(5)
+        tresult = TierMerge.merge(base: tb, local: tm, remote: ts)
+        expect(tresult.conflicts.isEmpty, "uncontested tier removal merges")
+        expect(tresult.tier.tiers.count == 5, "removed tier is gone")
+        expect(tresult.tier.isValid, "tier removal merge stays valid")
+
+        // Tier removed by one side and relabeled by the other conflicts.
+        tb = tierBase(); tm = tb; ts = tb
+        let removedTierID = tb.tiers[5].id
+        tm.setTierCount(5)
+        ts.tiers[5].label = "Z"
+        tresult = TierMerge.merge(base: tb, local: tm, remote: ts)
+        expect(tresult.conflicts.map(\.id) == ["tier-removed-\(removedTierID.uuidString)"], "delete versus relabel tier conflicts")
+
+        // Keeping a tier after delete-versus-relabel introduces no phantom
+        // second conflict.
+        let existenceKey = "tier-removed-\(removedTierID.uuidString)"
+        tresult = TierMerge.merge(base: tb, local: tm, remote: ts, choices: [existenceKey: .shared])
+        expect(tresult.conflicts.isEmpty, "keeping the tier resolves without a phantom label conflict")
+        expect(tresult.tier.tiers.contains(where: { $0.id == removedTierID && $0.label == "Z" }), "kept tier keeps the remote label")
+
+        // Independent label and color edits merge without a deletion conflict.
+        tb = tierBase(); tm = tb; ts = tb
+        tm.tiers[0].label = "Top"
+        ts.tiers[0].color = TierColor.defaultPalette[1]
+        tresult = TierMerge.merge(base: tb, local: tm, remote: ts)
+        expect(tresult.conflicts.isEmpty, "independent label and color edits merge")
+        expect(tresult.tier.tiers[0].label == "Top" && tresult.tier.tiers[0].color == TierColor.defaultPalette[1], "label and color edits both survive")
+
+        // An item kept after delete-versus-edit stays ranked even when the
+        // winning order sequence no longer contains it.
+        tb = tierBase(); tm = tb; ts = tb
+        let keepID = tb.tiers[0].items[0].id
+        tm.tiers[0].items.remove(at: 0)
+        tm.tiers[0].items.reverse()
+        ts.tiers[0].items[0].caption = "A2"
+        tresult = TierMerge.merge(base: tb, local: tm, remote: ts, choices: ["item-removed-\(keepID.uuidString)": .shared])
+        expect(tresult.conflicts.isEmpty, "kept item resolution is complete")
+        expect(tresult.tier.tiers[0].items.contains(where: { $0.id == keepID }), "item kept after delete-versus-edit stays ranked")
+        expect(tresult.tier.isValid, "kept-item merge stays valid")
+
+        // An item added into a tier the other side removed spills to unranked.
+        tb = tierBase(); tm = tb; ts = tb
+        tm.setTierCount(5)
+        var addedX = ChartCell(); addedX.caption = "X"
+        ts.tiers[5].items = [addedX]
+        let spillKey = "tier-removed-\(tb.tiers[5].id.uuidString)"
+        tresult = TierMerge.merge(base: tb, local: tm, remote: ts)
+        expect(tresult.conflicts.map(\.id) == [spillKey], "add into removed tier conflicts")
+        tresult = TierMerge.merge(base: tb, local: tm, remote: ts, choices: [spillKey: .mine])
+        expect(tresult.conflicts.isEmpty, "tier removal choice resolves")
+        expect(tresult.tier.unranked.contains(where: { $0.id == addedX.id }), "item added into a removed tier spills to unranked")
+        expect(tresult.tier.isValid, "spill merge stays valid")
+
+        // Capacity overflow goes to review instead of dead-ending the share.
+        tb = tierBase()
+        tb.unranked = (0..<30).map { _ in ChartCell() }
+        tm = tb; ts = tb
+        tm.unranked += (0..<18).map { _ in ChartCell() }
+        ts.unranked += (0..<18).map { _ in ChartCell() }
+        tresult = TierMerge.merge(base: tb, local: tm, remote: ts)
+        expect(tresult.conflicts.map(\.id) == ["tier-capacity"], "unranked overflow goes to review")
+        tresult = TierMerge.merge(base: tb, local: tm, remote: ts, choices: ["tier-capacity": .mine])
+        expect(tresult.conflicts.isEmpty && tresult.tier.isValid, "capacity choice resolves to a valid chart")
+
+        // Insertions that shift indices are not moves: no order conflict.
+        tb = tierBase(); tm = tb; ts = tb
+        var inserted = ChartCell(); inserted.caption = "New"
+        tm.tiers[0].items.insert(inserted, at: 0)
+        ts.tiers[0].items[2].caption = "C2"
+        tresult = TierMerge.merge(base: tb, local: tm, remote: ts)
+        expect(tresult.conflicts.isEmpty, "index shift from insertion does not conflict")
+        expect(tresult.tier.tiers[0].items.map(\.caption) == ["New", "A", "B", "C2"], "insertion order and remote edit both survive")
+
+        // Structural tier-count overflow goes to review, not truncation.
+        tb = tierBase(); tm = tb; ts = tb
+        tm.addTier(label: "G", color: TierColor.defaultPalette[0])
+        tm.addTier(label: "H", color: TierColor.defaultPalette[1])
+        ts.addTier(label: "I", color: TierColor.defaultPalette[2])
+        tresult = TierMerge.merge(base: tb, local: tm, remote: ts)
+        expect(tresult.conflicts.map(\.id) == ["tier-structure"], "nine tiers goes to review")
+        tresult = TierMerge.merge(base: tb, local: tm, remote: ts, choices: ["tier-structure": .mine])
+        expect(tresult.conflicts.isEmpty && tresult.tier.tiers.count == 8, "structural choice applies")
+
+        // Older draft without a base needs an explicit whole-chart choice.
+        tm = tierBase(); ts = tierBase()
+        tm.title = "Old draft"; ts.title = "New draft"
+        tresult = TierMerge.merge(base: nil, local: tm, remote: ts)
+        expect(tresult.conflicts.map(\.id) == ["tierchart"], "baseless tier draft needs review")
+        tresult = TierMerge.merge(base: nil, local: tm, remote: ts, choices: ["tierchart": .mine])
+        expect(tresult.conflicts.isEmpty && tresult.tier.title == "Old draft", "baseless tier choice applies")
     }
 }

@@ -11,6 +11,7 @@ xcrun swiftc -parse-as-library \
   "$sources_dir/Models/ChartContent.swift" \
   "$sources_dir/Daily/DailyModels.swift" \
   "$sources_dir/Models/ChartMerge.swift" \
+  "$sources_dir/Models/TierMerge.swift" \
   "$sources_dir/Models/ChartSync.swift" \
   "$sources_dir/Persistence/ChartHistoryStore.swift" \
   "$project_dir/Tests/CollaborationTests.swift" \

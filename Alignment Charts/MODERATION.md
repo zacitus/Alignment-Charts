@@ -30,6 +30,19 @@ with. Charts are not listed anywhere publicly.
   record is rejected unless it decodes to a `ChartState` where `chart.isValid`
   holds and the chart UUID matches the record name. Malformed records never
   render.
+- **Payload validation on tier download** (`CloudKitChartService.decodeTier`):
+  a fetched record is rejected unless it decodes to a kind-tagged
+  `ChartContent.tier` whose `TierState` `isValid` holds (2–8 tiers, unique
+  tier/item IDs, item caps) and whose UUID matches the record name.
+- **Merge instead of overwrite on co-edited tier charts** (`TierMerge`): when
+  two participants edit the same tier chart, the upload three-way merges
+  against the editing base with compare-and-swap retries. Concurrent edits
+  that cannot be reconciled (same title, tier, or item changed both ways;
+  item moved to two places; tier deleted on one side and changed on the
+  other) surface a review where the user picks which version to keep; nothing
+  uploads until every conflict is resolved. Merge results are re-validated
+  before upload, so a merged chart can never place an invalid chart in shared
+  storage.
 - **Local hide** (`ChartHistoryStore.hide(_:in:)`): hides a chart from the
   history view for a given conversation scope. Local-only; it does not affect
   shared storage or other devices.

@@ -105,29 +105,56 @@ final class CloudKitChartService {
         return chart
     }
 
-    /// Tier upload is last-writer-wins: there is no `ChartMerge` for tier charts in P1.
-    /// On `.serverRecordChanged` the loop refetches and re-commits the local tier, up to
-    /// 5 attempts, then throws `ChartSyncError.busy`.
-    func uploadTier(_ tier: TierState) async throws -> TierState {
-        guard tier.isValid else { throw ChartSyncError.invalidChart }
+    /// Tier upload mirrors the grid's `ChartSync.save`: three-way merge against
+    /// the editing base, CAS commit, and a `TierMergeReview` on conflicts.
+    /// Last-writer-wins is gone: a local tier never silently overwrites a
+    /// co-editor's tier. On `.serverRecordChanged` the loop refetches and
+    /// re-merges, up to 5 attempts, then throws `ChartSyncError.busy`.
+    func uploadTier(_ tier: TierState, base: TierState?) async throws -> TierState {
+        guard tier.isValid, base?.isValid != false, base == nil || base?.id == tier.id else {
+            throw ChartSyncError.invalidChart
+        }
         let recordID = CKRecord.ID(recordName: tier.id.uuidString)
         for _ in 0..<5 {
             try Task.checkCancellation()
             let version = try await self.recordIfPresent(recordID)
-            let record = version ?? CKRecord(recordType: Self.chartRecordType, recordID: recordID)
-            var uploaded = tier
-            uploaded.updatedAt = .now
-            let tierCells = uploaded.tiers.flatMap { $0.items } + uploaded.unranked
-            try await self.prepareImages(cells: tierCells, chartID: uploaded.id)
+            var result = tier
+            if let version {
+                let remote = try decodeTier(version)
+                let review = TierMergeReview(base: base, local: tier, remote: remote)
+                let merge = review.merged()
+                guard merge.conflicts.isEmpty else {
+                    // Cache the remote images before the review UI shows them,
+                    // mirroring the grid's upload(_:base:) conflict path. Best
+                    // effort: a failed download must not mask the review
+                    // itself; missing art renders as a placeholder.
+                    try? await self.downloadImages(
+                        cells: remote.tiers.flatMap { $0.items } + remote.unranked,
+                        chartID: remote.id)
+                    throw review
+                }
+                result = merge.tier
+            } else if base != nil {
+                // Someone deleted the record while this device was editing.
+                throw ChartSyncError.missingChart
+            }
+            result.updatedAt = .now
+            // Backstop only: the merge assembles a valid chart (duplicates are
+            // impossible by construction, tier count goes to review, capacity
+            // spills to unranked). Never let an invalid chart reach the server.
+            guard result.isValid else { throw ChartSyncError.invalidChart }
+            let tierCells = result.tiers.flatMap { $0.items } + result.unranked
+            try await self.prepareImages(cells: tierCells, chartID: result.id)
             try Task.checkCancellation()
-            let payload = try JSONEncoder().encode(ChartContent.tier(uploaded))
+            let payload = try JSONEncoder().encode(ChartContent.tier(result))
+            let record = version ?? CKRecord(recordType: Self.chartRecordType, recordID: recordID)
             record[Self.payloadKey] = String(decoding: payload, as: UTF8.self)
             do {
                 try await self.save(record)
             } catch let error as CKError where error.code == .serverRecordChanged {
                 continue
             }
-            return uploaded
+            return result
         }
         throw ChartSyncError.busy
     }

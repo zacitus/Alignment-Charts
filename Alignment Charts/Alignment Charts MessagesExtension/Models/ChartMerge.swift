@@ -8,6 +8,29 @@ enum ChartConflictPreview: Sendable {
     case text(String)
     case image(UUID?)
     case chart(ChartState)
+    case tier(TierState)
+}
+
+/// A merge awaiting the user's conflict choices, grid or tier. The conflict UI
+/// and RootView only need identity and the unresolved conflict list.
+enum PendingMergeReview: Identifiable, Sendable {
+    case grid(ChartMergeReview)
+    case tier(TierMergeReview)
+
+    var id: UUID {
+        switch self {
+        case .grid(let review): return review.id
+        case .tier(let review): return review.id
+        }
+    }
+
+    /// Conflicts with no choices applied, which is what the review UI presents.
+    var conflicts: [ChartConflict] {
+        switch self {
+        case .grid(let review): return review.merged().conflicts
+        case .tier(let review): return review.merged().conflicts
+        }
+    }
 }
 
 struct ChartConflict: Identifiable, Sendable {
