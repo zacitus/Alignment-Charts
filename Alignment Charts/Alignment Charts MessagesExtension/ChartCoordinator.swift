@@ -312,8 +312,8 @@ final class ChartCoordinator: ObservableObject {
     /// surface a merge review instead of overwriting.
     private func tierShare(_ tier: TierState, base: TierState?, conversation: MSConversation, session: MSSession?, editor: UUID, scope: String) async {
         guard editingID == editor, conversationScope == scope else { return }
-        guard tier.rankedItemCount > 0 else {
-            errorMessage = "Rank at least one item before sharing."
+        guard tier.totalItemCount > 0 else {
+            errorMessage = "Add at least one item before sharing."
             return
         }
         do {

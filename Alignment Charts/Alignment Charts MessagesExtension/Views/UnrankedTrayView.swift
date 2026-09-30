@@ -11,6 +11,9 @@ struct UnrankedTrayView: View {
     var onReorder: ((UUID, Int) -> Void)? = nil
     var aiSuggestionsAvailable: Bool = false
     var onAIRequest: () -> Void = {}
+    var generateFromTitleAvailable: Bool = false
+    var onGenerateFromTitle: () -> Void = {}
+    var isGeneratingFromTitle: Bool = false
 
     @State private var isDropTarget = false
     @State private var insertionIndex: Int?
@@ -28,6 +31,20 @@ struct UnrankedTrayView: View {
                 Button(action: onAdd) { Image(systemName: "plus") }
                     .frame(minWidth: 44, minHeight: 44)
                     .accessibilityLabel("Add item to Unranked")
+            }
+            if generateFromTitleAvailable {
+                if isGeneratingFromTitle {
+                    ProgressView("Generating items…")
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                } else {
+                    Button(action: onGenerateFromTitle) {
+                        Label("Generate 12 items", systemImage: "sparkles")
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.blue)
+                    .accessibilityLabel("Generate 12 items from the chart title")
+                }
             }
             ScrollView(.horizontal, showsIndicators: true) {
                 HStack(spacing: 0) {

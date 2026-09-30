@@ -15,6 +15,8 @@ struct TierEditorView: View {
     @State private var showsDeleteConfirmation = false
     @State private var inlineNote: TierInlineNote?
     @State private var showsAISheet = false
+    @State private var isGeneratingFromTitle = false
+    @State private var backgroundTasks: [Task<Void, Never>] = []
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(
@@ -55,7 +57,6 @@ struct TierEditorView: View {
                         .textFieldStyle(.plain)
                         .padding(.top, 12)
                     tiersSection.padding(.top, 16)
-                    chartSection.padding(.top, 26)
                     UnrankedTrayView(
                         unranked: tier.unranked,
                         onTap: selectCell,
@@ -68,12 +69,16 @@ struct TierEditorView: View {
                         onAIRequest: {
                             guard !isSending else { return }
                             showsAISheet = true
-                        }
+                        },
+                        generateFromTitleAvailable: !tier.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && tier.totalItemCount == 0 && AISuggestionsService.isAvailable && !isSending,
+                        onGenerateFromTitle: generateItemsFromTitle,
+                        isGeneratingFromTitle: isGeneratingFromTitle
                     )
                     .sheet(isPresented: $showsAISheet) {
                         AISuggestionsSheet(onGenerate: addGeneratedSuggestions)
                     }
                     .padding(.top, 16)
+                    chartSection.padding(.top, 26)
                     if let inlineNote {
                         Text(inlineNote.message)
                             .font(.subheadline)
@@ -99,7 +104,7 @@ struct TierEditorView: View {
                         .disabled(isSending)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: onShare) {
+                    Button(action: shareTapped) {
                         if isSending {
                             ProgressView()
                         } else {
@@ -142,6 +147,13 @@ struct TierEditorView: View {
                 if let selectedCell, !ids.contains(selectedCell.id) {
                     self.selectedCell = nil
                 }
+            }
+            .onChange(of: isSending) { _, sending in
+                guard sending else { return }
+                // A share snapshots the chart for upload; cancel in-flight AI and
+                // photo work so late write-backs can't land mid-upload.
+                backgroundTasks.forEach { $0.cancel() }
+                backgroundTasks.removeAll()
             }
             .confirmationDialog(deleteConfirmationTitle, isPresented: $showsDeleteConfirmation, titleVisibility: .visible) {
                 Button("Move items and delete tier", role: .destructive) {
@@ -323,6 +335,14 @@ struct TierEditorView: View {
         if !removed { showNote("Couldn’t delete this tier") }
     }
 
+    private func shareTapped() {
+        guard !isGeneratingFromTitle else {
+            showNote("Still generating items…")
+            return
+        }
+        onShare()
+    }
+
     private func addItem() {
         guard !isSending else { return }
         guard tier.unranked.count < TierState.maxUnrankedItems else {
@@ -335,17 +355,85 @@ struct TierEditorView: View {
     }
 
     private func addGeneratedSuggestions(_ suggestions: [String]) {
-        guard !isSending else { return }
+        guard !isSending else {
+            showNote("Couldn't add items while sharing. Try again.")
+            return
+        }
         let room = max(0, TierState.maxUnrankedItems - tier.unranked.count)
         guard room > 0 else {
             showNote("Unranked is full")
             return
         }
+        var newIDs: [UUID] = []
         for caption in suggestions.prefix(room) {
             var cell = ChartCell()
             cell.caption = caption
             tier.unranked.append(cell)
+            newIDs.append(cell.id)
         }
+        // Best-effort photo attachments run off the critical path: items appear
+        // immediately with captions; photos pop in as they arrive. Attachments run
+        // at most four at a time to stay polite to the Wikipedia API.
+        for start in stride(from: 0, to: newIDs.count, by: 4) {
+            let chunk = Array(newIDs[start..<min(start + 4, newIDs.count)])
+            let task = Task { @MainActor in
+                for id in chunk {
+                    guard !Task.isCancelled else { return }
+                    await attachFirstPhotoWork(to: id)
+                }
+            }
+            backgroundTasks.append(task)
+        }
+    }
+
+    /// Uses the chart title as the AI topic to generate 12 new items.
+    private func generateItemsFromTitle() {
+        guard !isSending, !isGeneratingFromTitle,
+              !tier.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              tier.totalItemCount == 0,
+              AISuggestionsService.isAvailable else { return }
+        isGeneratingFromTitle = true
+        showNote("Generating 12 items from the title…")
+        let task = Task { @MainActor in
+            defer { isGeneratingFromTitle = false }
+            do {
+                let topic = tier.title.trimmingCharacters(in: .whitespacesAndNewlines)
+                let items = try await AISuggestionsService().suggestions(for: topic, count: 12)
+                try Task.checkCancellation()
+                addGeneratedSuggestions(items)
+                showNote("Added \(items.count) items")
+            } catch is CancellationError {
+                // Share started mid-generation; state was already cleaned up.
+            } catch {
+                showNote(error.localizedDescription)
+            }
+        }
+        backgroundTasks.append(task)
+    }
+
+    /// Attaches the first Wikipedia/Wikimedia photo for the cell's caption, best-effort.
+    /// Silently skips on any failure (item keeps its caption); never crashes if the
+    /// cell was moved, ranked, or deleted while the photo was loading. Photos that
+    /// finish after a share starts ride along on the next upload.
+    @MainActor
+    private func attachFirstPhotoWork(to id: UUID) async {
+        guard let caption = cell(for: id)?.caption,
+              !caption.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        guard let results = try? await ImageSearchService.search(caption),
+              let first = results.first,
+              let image = try? await ImageSearchService.image(for: first) else { return }
+        // Check the cell is still around before writing anything to disk, so a
+        // deleted cell can't orphan an image file in the sandbox.
+        guard !Task.isCancelled,
+              let binding = cellBinding(for: id) else { return }
+        let imageID = UUID()
+        guard ImageStore.save(image, for: imageID) else { return }
+        // cellBinding's setter re-resolves the cell by id and re-checks membership,
+        // so a moved/ranked cell still gets its photo and a deleted one is skipped.
+        var updated = binding.wrappedValue
+        updated.setImageReference(imageID)
+        updated.imageSearchResultID = first.id
+        binding.wrappedValue = updated
     }
 
     private func selectCell(_ id: UUID) {
